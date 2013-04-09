@@ -13,10 +13,18 @@
 #include "FreeImage.h"
 #include "shaders.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/epsilon.hpp>
+
 
 #define BPP 24
 #define EPSILON 0.00000001
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
+
+typedef glm::vec3 vec3;
+typedef glm::mat3 mat3;
 
 using namespace std;
 
@@ -30,7 +38,6 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 FIBITMAP* bitmap;
-
 
 void
 print_vector(const vec3& v) {
@@ -83,34 +90,35 @@ void keyboard(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
-void init(char* filename) {
+void init() {
+	
+	width = 512;
+	height = 512;
 
 	FreeImage_Initialise();
 	bitmap = FreeImage_Allocate(width, height, BPP);
 
-	if (!numFrames) {
-		vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
-		fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
-		shaderprogram = initprogram(vertexshader, fragmentshader);
-
-		glGenTextures(1, &texture);
-		glEnable(GL_TEXTURE_2D) ;
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glActiveTexture(GL_TEXTURE0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		BYTE* bits = FreeImage_GetBits(bitmap);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
-			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(-1,1,-1,1,-1,1);
-		glMatrixMode(GL_MODELVIEW);
-		glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
-		glLoadMatrixf(&mv[0][0]);
-	}
+	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
+	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
+	shaderprogram = initprogram(vertexshader, fragmentshader);
+    
+	glGenTextures(1, &texture);
+	glEnable(GL_TEXTURE_2D) ;
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glActiveTexture(GL_TEXTURE0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+	BYTE* bits = FreeImage_GetBits(bitmap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
+		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+    
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1,1,-1,1,-1,1);
+	glMatrixMode(GL_MODELVIEW);
+	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
+	glLoadMatrixf(&mv[0][0]);
 
 }
 
@@ -135,10 +143,10 @@ void display(){
 
 
 int main(int argc, char* argv[]){
-	if(argc < 2) {
-		cerr << "You need at least 1 scene file as the argument" << endl;
-		exit(1);
-	}
+	//if(argc < 2) {
+	//	cerr << "You need at least 1 scene file as the argument" << endl;
+	//	exit(1);
+	//}
 	srand(time(0));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
