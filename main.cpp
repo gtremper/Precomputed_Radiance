@@ -117,7 +117,7 @@ void init() {
     
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-1,1,-1,1,-1,1);
+	glOrtho(-1,1,1,-1,-1,1);
 	glMatrixMode(GL_MODELVIEW);
 	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 	glLoadMatrixf(&mv[0][0]);
