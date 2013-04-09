@@ -10,7 +10,6 @@
 #include <time.h>
 #include <GLUT/glut.h>
 
-#include "FreeImage.h"
 #include "shaders.h"
 #include "lodepng.h"
 
@@ -30,15 +29,16 @@ typedef glm::mat3 mat3;
 using namespace std;
 
 /* Paramaters */
-int height;
-int width;
+unsigned int height = 680;
+unsigned int width = 880;
 
 /* Shaders */
 GLuint vertexshader;
 GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
-FIBITMAP* bitmap;
+
+vector<unsigned char> image; //the raw pixels
 
 void
 print_vector(const vec3& v) {
@@ -76,14 +76,12 @@ void keyboard(unsigned char key, int x, int y) {
 		case 'l':
 			break;
 		case 's':
-			FreeImage_Save(FIF_PNG, bitmap, "output.png", 0);
 			cout << "Image saved!" << endl;
 			break;
 		case 'r':
 			glutReshapeWindow(width, height);
 			break;
 		case 27:  // Escape to quit
-			FreeImage_DeInitialise();
 			exit(0);
 			break;
 
@@ -93,11 +91,15 @@ void keyboard(unsigned char key, int x, int y) {
 
 void init() {
 	
-	width = 512;
-	height = 512;
-
-	FreeImage_Initialise();
-	bitmap = FreeImage_Allocate(width, height, BPP);
+	width = 680;
+	height = 880;
+	
+	vector<unsigned char> image; //the raw pixels
+	const char* filename = string("demo01.png").c_str();
+	unsigned error = lodepng::decode(image, width, height, filename);
+	
+	//if there's an error, display it
+	if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -110,9 +112,8 @@ void init() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
-	BYTE* bits = FreeImage_GetBits(bitmap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
-		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,height,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
     
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -126,10 +127,9 @@ void init() {
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-	BYTE* bits = FreeImage_GetBits(bitmap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-					0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-	glutPostRedisplay();
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+	//				0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+	//glutPostRedisplay();
 
 
 	glBegin(GL_QUADS);
