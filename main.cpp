@@ -29,8 +29,8 @@ typedef glm::mat3 mat3;
 using namespace std;
 
 /* Paramaters */
-unsigned int height = 680;
-unsigned int width = 880;
+unsigned int height;
+unsigned int width;
 
 /* Shaders */
 GLuint vertexshader;
@@ -38,7 +38,9 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 
-vector<unsigned char> image; //the raw pixels
+vector<unsigned char> red_matrix;
+vector<unsigned char> green_matrix;
+vector<unsigned char> blue_matrix;
 
 void
 print_vector(const vec3& v) {
@@ -51,15 +53,6 @@ print_matrix(const mat3& m) {
 	cout << m[1][0] << "|" << m[1][1] << "| " << m[1][2] << endl;
 	cout << m[2][0] << "|" << m[2][1] << "| " << m[2][2] << endl;
 }
-
-/*
-
-rgb.rgbRed = min(color[0],1.0)*255.0;
-rgb.rgbGreen = min(color[1],1.0)*255.0;
-rgb.rgbBlue = min(color[2],1.0)*255.0;
-FreeImage_SetPixelColor(bitmap,i,j,&rgb);
-
-*/
 
 
 /* Everything below here is openGL boilerplate */
@@ -100,6 +93,14 @@ void init() {
 	
 	//if there's an error, display it
 	if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
+	
+	
+	for(unsigned int i=0; i<image.size(); i+=4) {
+		red_matrix.push_back(image[i]);
+		green_matrix.push_back(image[i+1]);
+		blue_matrix.push_back(image[i+2]);
+	}
+	cout << "DEEERP" << endl;
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -112,8 +113,8 @@ void init() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,height,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
+	//	0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
     
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -132,10 +133,19 @@ void init() {
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-	//				0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-	//glutPostRedisplay();
-
+	cout << "derp" << endl;
+	
+	vector<unsigned char> image;
+	
+	for (unsigned int i=0; i<red_matrix.size(); i++){
+		image.push_back(red_matrix[i]);
+		image.push_back(green_matrix[i]);
+		image.push_back(blue_matrix[i]);
+	}
+	
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
 
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
