@@ -19,7 +19,7 @@ CCOPTS = -c -I./glm-0.9.4.2 -fopenmp -I./GL $(CFLAGS)
 LDOPTS = -L./lib/mac -lfreeimage -fopenmp $(LDFLAGS) 
 
 #Final Files and Intermediate .o Files
-OBJECTS = main.o Shaders.o
+OBJECTS = main.o shaders.o lodepng.o
 TARGET = viewer
 
 #------------------------------------------------------
@@ -31,8 +31,11 @@ viewer: $(OBJECTS)
 main.o: main.cpp
 	$(CC) $(CCOPTS) main.cpp
 
-Shaders.o: shaders.cpp
+shaders.o: shaders.cpp
 	$(CC) $(CCOPTS) shaders.cpp
+
+lodepng.o: lodepng.cpp
+	$(CC) $(CCOPTS) lodepng.cpp
 
 default: $(TARGET)
 

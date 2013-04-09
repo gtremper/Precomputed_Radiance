@@ -12,6 +12,7 @@
 
 #include "FreeImage.h"
 #include "shaders.h"
+#include "lodepng.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
