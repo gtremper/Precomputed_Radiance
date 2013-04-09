@@ -109,8 +109,8 @@ void init() {
 	glEnable(GL_TEXTURE_2D) ;
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glActiveTexture(GL_TEXTURE0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,height,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
@@ -121,7 +121,12 @@ void init() {
 	glMatrixMode(GL_MODELVIEW);
 	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 	glLoadMatrixf(&mv[0][0]);
-
+	
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glDisable(GL_ALPHA_TEST);
 }
 
 void display(){
