@@ -68,11 +68,17 @@ void mouseClick(int button, int state, int x, int y) {
 }
 
 void mouse(int x, int y) {
-	
 	int diffx=x-lastx; 
     int diffy=y-lasty; 
     lastx=x; //set lastx to the current x position
     lasty=y; //set lasty to the current y position
+
+	trans_y -= diffy;
+	trans_y = min(255,trans_y);
+	trans_y = max(0,trans_y);
+	lights[0].second = 255-trans_y;
+	lights[1].second = trans_y;
+	glutPostRedisplay();
 }
 
 
@@ -125,16 +131,15 @@ void init() {
 	width = 680;
 	height = 880;
 	
+	trans_y = 0;
+	
+	red_matrix = new vector<unsigned char>[2];
+	green_matrix = new vector<unsigned char>[2];
+	blue_matrix = new vector<unsigned char>[2];
+	
 	vector<unsigned char> image; //the raw pixels
 	const char* filename = string("demo01.png").c_str();
 	unsigned error = lodepng::decode(image, width, height, filename);
-	
-	//if there's an error, display it
-	if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
-	
-	red_matrix = new vector<unsigned char>[1];
-	green_matrix = new vector<unsigned char>[1];
-	blue_matrix = new vector<unsigned char>[1];
 	
 	for(unsigned int i=0; i<image.size(); i+=4) {
 		red_matrix[0].push_back(image[i]);
@@ -142,7 +147,24 @@ void init() {
 		blue_matrix[0].push_back(image[i+2]);
 	}
 	
+	for(unsigned int i=0; i<image.size(); i+=4) {
+		red_matrix[0].push_back(image[i]);
+		green_matrix[0].push_back(image[i+1]);
+		blue_matrix[0].push_back(image[i+2]);
+	}
+	
+	image.clear();
+	const char* filename2 = string("demo02.png").c_str();
+	error = lodepng::decode(image, width, height, filename2);
+	
+	for(unsigned int i=0; i<image.size(); i+=4) {
+		red_matrix[1].push_back(image[i]);
+		green_matrix[1].push_back(image[i+1]);
+		blue_matrix[1].push_back(image[i+2]);
+	}
+	
 	lights.push_back(make_pair(0,255));
+	lights.push_back(make_pair(1,0));
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -172,7 +194,7 @@ void init() {
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-	cout << "derp" << endl;
+	cout << trans_y << endl;
 	
 	vector<unsigned char> image;
 	image.reserve(3*width*height);
