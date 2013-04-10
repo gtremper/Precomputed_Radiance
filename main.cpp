@@ -31,6 +31,9 @@ using namespace std;
 /* Paramaters */
 unsigned int height;
 unsigned int width;
+int lastx, lasty; // For mouse motion
+int trans_x;
+int trans_y;
 
 /* Shaders */
 GLuint vertexshader;
@@ -38,20 +41,29 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 
-vector<unsigned char> red_matrix;
-vector<unsigned char> green_matrix;
-vector<unsigned char> blue_matrix;
+/*
+Light transport matricies for each color channel
+The array indexes the columns
+*/
+vector<unsigned char>* red_matrix;
+vector<unsigned char>* green_matrix;
+vector<unsigned char>* blue_matrix;
 
-void
-print_vector(const vec3& v) {
-	cout << v[0] << " " << v[1] << " " << v[2] << endl;
+
+/* Mouse Functions */
+void mouseClick(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+		lastx = x;
+		lasty = y;
+	}
 }
 
-void
-print_matrix(const mat3& m) {
-	cout << m[0][0] << "|" << m[0][1] << "| " << m[0][2] << endl;
-	cout << m[1][0] << "|" << m[1][1] << "| " << m[1][2] << endl;
-	cout << m[2][0] << "|" << m[2][1] << "| " << m[2][2] << endl;
+void mouse(int x, int y) {
+	
+	int diffx=x-lastx; 
+    int diffy=y-lasty; 
+    lastx=x; //set lastx to the current x position
+    lasty=y; //set lasty to the current y position
 }
 
 
@@ -75,9 +87,26 @@ void keyboard(unsigned char key, int x, int y) {
 			glutReshapeWindow(width, height);
 			break;
 		case 27:  // Escape to quit
+			delete [] red_matrix;
+			delete [] green_matrix;
+			delete [] blue_matrix;
 			exit(0);
 			break;
 
+	}
+	glutPostRedisplay();
+}
+
+void specialKey(int key,int x,int y) {
+	switch(key) {
+		case 100: //left
+			break;
+		case 101: //up
+			break;
+		case 102: //right
+			break;
+		case 103: //down
+			break;
 	}
 	glutPostRedisplay();
 }
@@ -95,10 +124,15 @@ void init() {
 	if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
 	
 	
+	red_matrix = new vector<unsigned char>[1];
+	green_matrix = new vector<unsigned char>[1];
+	blue_matrix = new vector<unsigned char>[1];
+	
+	
 	for(unsigned int i=0; i<image.size(); i+=4) {
-		red_matrix.push_back(image[i]);
-		green_matrix.push_back(image[i+1]);
-		blue_matrix.push_back(image[i+2]);
+		red_matrix[0].push_back(image[i]);
+		green_matrix[0].push_back(image[i+1]);
+		blue_matrix[0].push_back(image[i+2]);
 	}
 	cout << "DEEERP" << endl;
 
@@ -112,9 +146,6 @@ void init() {
 	glActiveTexture(GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
-	//	0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
     
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -137,10 +168,10 @@ void display(){
 	
 	vector<unsigned char> image;
 	
-	for (unsigned int i=0; i<red_matrix.size(); i++){
-		image.push_back(red_matrix[i]);
-		image.push_back(green_matrix[i]);
-		image.push_back(blue_matrix[i]);
+	for (unsigned int i=0; i<red_matrix[0].size(); i++){
+		image.push_back(red_matrix[0][i]);
+		image.push_back(green_matrix[0][i]);
+		image.push_back(blue_matrix[0][i]);
 	}
 	
 	
@@ -171,8 +202,11 @@ int main(int argc, char* argv[]){
 	display();
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(specialKey);
 	glutReshapeFunc(reshape);
 	glutReshapeWindow(width,height);
+	glutMotionFunc(mouse);
+	glutMouseFunc(mouseClick);
 	glutMainLoop();
 	return 0;
 }
