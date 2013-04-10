@@ -31,6 +31,7 @@ using namespace std;
 /* Paramaters */
 unsigned int height;
 unsigned int width;
+unsigned int env_resolution;
 int lastx, lasty; // For mouse motion
 int trans_x;
 int trans_y;
@@ -48,6 +49,14 @@ The array indexes the columns
 vector<unsigned char>* red_matrix;
 vector<unsigned char>* green_matrix;
 vector<unsigned char>* blue_matrix;
+
+vector<unsigned char>* red_env;
+vector<unsigned char>* green_env;
+vector<unsigned char>* blue_env;
+
+vector< pair<int,unsigned char> > lights;
+
+
 
 
 /* Mouse Functions */
@@ -123,18 +132,17 @@ void init() {
 	//if there's an error, display it
 	if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
 	
-	
 	red_matrix = new vector<unsigned char>[1];
 	green_matrix = new vector<unsigned char>[1];
 	blue_matrix = new vector<unsigned char>[1];
-	
 	
 	for(unsigned int i=0; i<image.size(); i+=4) {
 		red_matrix[0].push_back(image[i]);
 		green_matrix[0].push_back(image[i+1]);
 		blue_matrix[0].push_back(image[i+2]);
 	}
-	cout << "DEEERP" << endl;
+	
+	lights.push_back(make_pair(0,255));
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -167,13 +175,18 @@ void display(){
 	cout << "derp" << endl;
 	
 	vector<unsigned char> image;
+	image.reserve(3*width*height);
+	memset(&image[0], 0, 3*width*height);
 	
-	for (unsigned int i=0; i<red_matrix[0].size(); i++){
-		image.push_back(red_matrix[0][i]);
-		image.push_back(green_matrix[0][i]);
-		image.push_back(blue_matrix[0][i]);
+	for (unsigned int j=0; j<lights.size(); j++) {
+		int ind = lights[j].first;
+		int weight = lights[j].second;
+		for (unsigned int i=0; i<width*height; i++) {
+			image[3*i] += min(((int)red_matrix[ind][i]*weight + 127) / 255, 255);
+			image[3*i+1] += min(((int)green_matrix[ind][i]*weight + 127) / 255, 255);
+			image[3*i+2] += min(((int)blue_matrix[ind][i]*weight + 127) / 255, 255);
+		}
 	}
-	
 	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
 		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
@@ -190,10 +203,6 @@ void display(){
 
 
 int main(int argc, char* argv[]){
-	//if(argc < 2) {
-	//	cerr << "You need at least 1 scene file as the argument" << endl;
-	//	exit(1);
-	//}
 	srand(time(0));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
