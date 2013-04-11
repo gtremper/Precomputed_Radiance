@@ -64,13 +64,10 @@ void build_transport_matrix(char *folder, const int num_files) {
 	vector<unsigned char> image; //the raw pixels
 	
 	for (int i=0; i<num_files; i++) {
-		cout << "TEST" << endl;
 		char filename[24];
 		sprintf(filename, "%s/demo%02d.png", folder, i);
 		
 		lodepng::decode(image, width, height, filename);
-		
-		cout << "TEST: "<<image.size() << endl;
 
 		for(unsigned int j=0; j<image.size(); j+=4) {
 			red_matrix[i].push_back(image[j]);
