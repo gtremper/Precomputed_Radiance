@@ -76,6 +76,7 @@ void haar1d(vector<float>::iterator vec, int w, bool is_col){
 	delete [] tmp;
 }
 
+/* Modified verstion of haar1d for 2d haar transform */
 void haar(vector<float>::iterator vec, int w, int res, bool is_col){
 	float *tmp = new float[w];
 	memset(tmp, 0, sizeof(float)*w);
