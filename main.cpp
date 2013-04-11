@@ -66,7 +66,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 	for (int i=0; i<num_files; i++) {
 		cout << "TEST" << endl;
 		char filename[24];
-		sprintf(filename, "demo%02d.png", i);
+		sprintf(filename, "%s/demo%02d.png", folder, i);
 		
 		lodepng::decode(image, width, height, filename);
 		
@@ -157,7 +157,7 @@ void init() {
 	
 	trans_y = 0;
 	
-	char* temp;
+	char* temp = "test_data";
 	build_transport_matrix(temp,2);
 	
 	lights.push_back(make_pair(0,255));
