@@ -31,8 +31,8 @@ unsigned int height;
 unsigned int width;
 unsigned int env_resolution;
 int lastx, lasty; // For mouse motion
-int trans_x;
-int trans_y;
+float trans_x;
+float trans_y;
 
 /* Shaders */
 GLuint vertexshader;
@@ -44,22 +44,27 @@ GLuint texture;
 Light transport matricies for each color channel
 The array indexes the columns
 */
-vector<unsigned char>* red_matrix;
-vector<unsigned char>* green_matrix;
-vector<unsigned char>* blue_matrix;
+vector<float>* red_matrix;
+vector<float>* green_matrix;
+vector<float>* blue_matrix;
 
-vector<unsigned char>* red_env;
-vector<unsigned char>* green_env;
-vector<unsigned char>* blue_env;
+vector<float>* red_env;
+vector<float>* green_env;
+vector<float>* blue_env;
 
-vector< pair<int,unsigned char> > lights;
+vector< pair<int,float> > lights;
+
+
+void haar1d(){
+	return;
+}
 
 /* Creates the light transport matrix from images in 'folder' */
 void build_transport_matrix(char *folder, const int num_files) {
 	
-	red_matrix = new vector<unsigned char>[num_files];
-	green_matrix = new vector<unsigned char>[num_files];
-	blue_matrix = new vector<unsigned char>[num_files];
+	red_matrix = new vector<float>[num_files];
+	green_matrix = new vector<float>[num_files];
+	blue_matrix = new vector<float>[num_files];
 	
 	vector<unsigned char> image; //the raw pixels
 	
@@ -70,9 +75,9 @@ void build_transport_matrix(char *folder, const int num_files) {
 		lodepng::decode(image, width, height, filename);
 
 		for(unsigned int j=0; j<image.size(); j+=4) {
-			red_matrix[i].push_back(image[j]);
-			green_matrix[i].push_back(image[j+1]);
-			blue_matrix[i].push_back(image[j+2]);
+			red_matrix[i].push_back(image[j]/255.0f);
+			green_matrix[i].push_back(image[j+1]/255.0f);
+			blue_matrix[i].push_back(image[j+2]/255.0f);
 		}
 		image.clear();
 	}
@@ -94,10 +99,10 @@ void mouse(int x, int y) {
     lastx=x; //set lastx to the current x position
     lasty=y; //set lasty to the current y position
 
-	trans_y -= diffy;
-	trans_y = min(255,trans_y);
-	trans_y = max(0,trans_y);
-	lights[0].second = 255-trans_y;
+	trans_y -= diffy*0.005f;
+	trans_y = min(1.0f,trans_y);
+	trans_y = max(0.0f,trans_y);
+	lights[0].second = 1.0f-trans_y;
 	lights[1].second = trans_y;
 	glutPostRedisplay();
 }
@@ -149,6 +154,7 @@ void specialKey(int key,int x,int y) {
 
 void init() {
 	
+	
 	width = 680;
 	height = 880;
 	
@@ -157,7 +163,7 @@ void init() {
 	char* temp = "test_data";
 	build_transport_matrix(temp,2);
 	
-	lights.push_back(make_pair(0,255));
+	lights.push_back(make_pair(0,1));
 	lights.push_back(make_pair(1,0));
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
@@ -187,7 +193,6 @@ void init() {
 
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
-	
 	cout << trans_y << endl;
 	
 	/* initialize pixel vector to set as texture */
@@ -198,17 +203,17 @@ void display(){
 	/*Loop through the chosen lights and combine them with their weight */
 	for (unsigned int j=0; j<lights.size(); j++) {
 		int ind = lights[j].first;
-		int weight = lights[j].second;
+		float weight = lights[j].second;
 		for (unsigned int i=0; i<width*height; i++) {
-			image[3*i] += min(((int)red_matrix[ind][i]*weight + 127) / 255, 255);
-			image[3*i+1] += min(((int)green_matrix[ind][i]*weight + 127) / 255, 255);
-			image[3*i+2] += min(((int)blue_matrix[ind][i]*weight + 127) / 255, 255);
+			image[3*i] += min(red_matrix[ind][i]*weight, 1.0f) * 255.0f;
+			image[3*i+1] += min(green_matrix[ind][i]*weight, 1.0f) * 255.0f;
+			image[3*i+2] += min(blue_matrix[ind][i]*weight, 1.0f) * 255.0f;
 		}
 	}
 	
+	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
 		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
-
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
 	glTexCoord2d(0, 0); glVertex3d(-1, 1, 0);
