@@ -57,19 +57,25 @@ vector< pair<int,float> > lights;
 /*
 1d haar transform. Vec must be a power of 2 length
 */
-void haar1d(vector<float>& vec){
-	int w = vec.size();
+void haar1d(vector<float>::iterator vec, int w, bool is_col){
 	float *tmp = new float[w];
 	memset(tmp, 0, sizeof(float)*w);
+	
+	int offset;
+	if (is_col) {
+		offset = w;
+	} else {
+		offset = 1;
+	}
 	
 	while (w>1) {
 		w /= 2;
 		for (int i=0; i<w; i++) {
-			tmp[i] = (vec[2*i] + vec[2*i+1]) / sqrt(2.0);
-			tmp[i+w] = (vec[2*i] - vec[2*i+1]) / sqrt(2.0);
+			tmp[i] = (vec[2*i*offset] + vec[(2*i+1)*offset]) / sqrt(2.0);
+			tmp[i+w] = (vec[2*i*offset] - vec[(2*i+1)*offset]) / sqrt(2.0);
 		}
 		for (int i=0; i<2*w; i++) {
-			vec[i] = tmp[i];
+			vec[i*offset] = tmp[i];
 		}
 	}
 	delete [] tmp;
@@ -80,6 +86,22 @@ void haar1d(vector<float>& vec){
 */
 void haar2d(vector<float>& vec){
 	int resolution = sqrt(vec.size()/6);
+	
+	vector<float>::iterator row_iter = vec.begin();
+	for (unsigned int block=0; block<vec.size(); block+=resolution*resolution){
+		/* Transform rows */
+		for (int i=0; i<resolution; i++){
+			haar1d(row_iter,resolution,false);
+			row_iter += resolution;
+		}
+		
+		/* Transform columns */
+		vector<float>::iterator col_iter = vec.begin()+block;
+		for (int i=0; i<resolution; i++){
+			haar1d(col_iter,resolution,true);
+			col_iter += 1;
+		}	
+	}
 }
 
 /* Creates the light transport matrix from images in 'folder' */
