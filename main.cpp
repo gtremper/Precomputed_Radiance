@@ -1,8 +1,6 @@
 /* This is the main file for the Precomputed Radiance viewer */
 
 #include <iostream>
-#include <cstdio>
-#include <stack>
 #include <string>
 #include <vector>
 #include "omp.h"
@@ -18,7 +16,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/epsilon.hpp>
 
-
 #define BPP 24
 #define EPSILON 0.00000001
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
@@ -27,6 +24,7 @@ typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
 
 using namespace std;
+
 
 /* Paramaters */
 unsigned int height;
@@ -56,6 +54,32 @@ vector<unsigned char>* blue_env;
 
 vector< pair<int,unsigned char> > lights;
 
+/* Creates the light transport matrix from images in 'folder' */
+void build_transport_matrix(char *folder, const int num_files) {
+	
+	red_matrix = new vector<unsigned char>[num_files];
+	green_matrix = new vector<unsigned char>[num_files];
+	blue_matrix = new vector<unsigned char>[num_files];
+	
+	vector<unsigned char> image; //the raw pixels
+	
+	for (int i=0; i<num_files; i++) {
+		cout << "TEST" << endl;
+		char filename[24];
+		sprintf(filename, "demo%02d.png", i);
+		
+		lodepng::decode(image, width, height, filename);
+		
+		cout << "TEST: "<<image.size() << endl;
+
+		for(unsigned int j=0; j<image.size(); j+=4) {
+			red_matrix[i].push_back(image[j]);
+			green_matrix[i].push_back(image[j+1]);
+			blue_matrix[i].push_back(image[j+2]);
+		}
+		image.clear();
+	}
+}
 
 
 
@@ -68,7 +92,7 @@ void mouseClick(int button, int state, int x, int y) {
 }
 
 void mouse(int x, int y) {
-	int diffx=x-lastx; 
+	//int diffx=x-lastx; 
     int diffy=y-lasty; 
     lastx=x; //set lastx to the current x position
     lasty=y; //set lasty to the current y position
@@ -133,35 +157,8 @@ void init() {
 	
 	trans_y = 0;
 	
-	red_matrix = new vector<unsigned char>[2];
-	green_matrix = new vector<unsigned char>[2];
-	blue_matrix = new vector<unsigned char>[2];
-	
-	vector<unsigned char> image; //the raw pixels
-	const char* filename = string("demo01.png").c_str();
-	unsigned error = lodepng::decode(image, width, height, filename);
-	
-	for(unsigned int i=0; i<image.size(); i+=4) {
-		red_matrix[0].push_back(image[i]);
-		green_matrix[0].push_back(image[i+1]);
-		blue_matrix[0].push_back(image[i+2]);
-	}
-	
-	for(unsigned int i=0; i<image.size(); i+=4) {
-		red_matrix[0].push_back(image[i]);
-		green_matrix[0].push_back(image[i+1]);
-		blue_matrix[0].push_back(image[i+2]);
-	}
-	
-	image.clear();
-	const char* filename2 = string("demo02.png").c_str();
-	error = lodepng::decode(image, width, height, filename2);
-	
-	for(unsigned int i=0; i<image.size(); i+=4) {
-		red_matrix[1].push_back(image[i]);
-		green_matrix[1].push_back(image[i+1]);
-		blue_matrix[1].push_back(image[i+2]);
-	}
+	char* temp;
+	build_transport_matrix(temp,2);
 	
 	lights.push_back(make_pair(0,255));
 	lights.push_back(make_pair(1,0));
@@ -196,10 +193,12 @@ void display(){
 	
 	cout << trans_y << endl;
 	
+	/* initialize pixel vector to set as texture */
 	vector<unsigned char> image;
 	image.reserve(3*width*height);
 	memset(&image[0], 0, 3*width*height);
 	
+	/*Loop through the chosen lights and combine them with their weight */
 	for (unsigned int j=0; j<lights.size(); j++) {
 		int ind = lights[j].first;
 		int weight = lights[j].second;
