@@ -106,11 +106,13 @@ void haar2d(vector<float>& vec){
 		
 		while (w>1)	{
 			vector<float>::iterator row_iter = vec.begin()+block;
-			vector<float>::iterator col_iter = vec.begin()+block;
 			for (int i=0; i<resolution; i++){
 				haar(row_iter,w,resolution,false);
-				haar(col_iter,w,resolution,true);
 				row_iter += resolution;
+			}
+			vector<float>::iterator col_iter = vec.begin()+block;
+			for (int i=0; i<resolution; i++){
+				haar(col_iter,w,resolution,true);
 				col_iter += 1;
 			}
 			w /= 2;
