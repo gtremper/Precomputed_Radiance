@@ -61,12 +61,7 @@ void haar1d(vector<float>::iterator vec, int w, bool is_col){
 	float *tmp = new float[w];
 	memset(tmp, 0, sizeof(float)*w);
 	
-	int offset;
-	if (is_col) {
-		offset = w;
-	} else {
-		offset = 1;
-	}
+	int offset = is_col ? w : 1;
 	
 	while (w>1) {
 		w /= 2;
@@ -81,26 +76,44 @@ void haar1d(vector<float>::iterator vec, int w, bool is_col){
 	delete [] tmp;
 }
 
+void haar(vector<float>::iterator vec, int w, int res, bool is_col){
+	float *tmp = new float[w];
+	memset(tmp, 0, sizeof(float)*w);
+	
+	int offset = is_col ? res : 1;
+	
+	w /= 2;
+	for (int i=0; i<w; i++) {
+		tmp[i] = (vec[2*i*offset] + vec[(2*i+1)*offset]) / sqrt(2.0);
+		tmp[i+w] = (vec[2*i*offset] - vec[(2*i+1)*offset]) / sqrt(2.0);
+	}
+	for (int i=0; i<2*w; i++) {
+		vec[i*offset] = tmp[i];
+	}
+	delete [] tmp;
+}
+
 /*
 2d haar transform on each face of a cubemap
 */
 void haar2d(vector<float>& vec){
+	
 	int resolution = sqrt(vec.size()/6);
 	
-	vector<float>::iterator row_iter = vec.begin();
 	for (unsigned int block=0; block<vec.size(); block+=resolution*resolution){
-		/* Transform rows */
-		for (int i=0; i<resolution; i++){
-			haar1d(row_iter,resolution,false);
-			row_iter += resolution;
-		}
+		int w = resolution;
 		
-		/* Transform columns */
-		vector<float>::iterator col_iter = vec.begin()+block;
-		for (int i=0; i<resolution; i++){
-			haar1d(col_iter,resolution,true);
-			col_iter += 1;
-		}	
+		while (w>1)	{
+			vector<float>::iterator row_iter = vec.begin()+block;
+			vector<float>::iterator col_iter = vec.begin()+block;
+			for (int i=0; i<resolution; i++){
+				haar(row_iter,w,resolution,false);
+				haar(col_iter,w,resolution,true);
+				row_iter += resolution;
+				col_iter += 1;
+			}
+			w /= 2;
+		}
 	}
 }
 
