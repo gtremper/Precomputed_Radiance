@@ -54,9 +54,32 @@ vector<float>* blue_env;
 
 vector< pair<int,float> > lights;
 
+/*
+1d haar transform. Vec must be a power of 2 length
+*/
+void haar1d(vector<float>& vec){
+	int w = vec.size();
+	float *tmp = new float[w];
+	memset(tmp, 0, sizeof(float)*w);
+	
+	while (w>1) {
+		w /= 2;
+		for (int i=0; i<w; i++) {
+			tmp[i] = (vec[2*i] + vec[2*i+1]) / sqrt(2.0);
+			tmp[i+w] = (vec[2*i] - vec[2*i+1]) / sqrt(2.0);
+		}
+		for (int i=0; i<2*w; i++) {
+			vec[i] = tmp[i];
+		}
+	}
+	delete [] tmp;
+}
 
-void haar1d(){
-	return;
+/*
+2d haar transform on each face of a cubemap
+*/
+void haar2d(vector<float>& vec){
+	int resolution = sqrt(vec.size()/6);
 }
 
 /* Creates the light transport matrix from images in 'folder' */
