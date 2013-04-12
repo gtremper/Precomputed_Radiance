@@ -99,24 +99,22 @@ void haar(vector<float>::iterator vec, int w, int res, bool is_col){
 */
 void haar2d(vector<float>& vec){
 	
-	int resolution = sqrt(vec.size()/6);
+	int resolution = sqrt(vec.size());
 	
-	for (unsigned int block=0; block<vec.size(); block+=resolution*resolution){
-		int w = resolution;
-		
-		while (w>1)	{
-			vector<float>::iterator row_iter = vec.begin()+block;
-			for (int i=0; i<resolution; i++){
-				haar(row_iter,w,resolution,false);
-				row_iter += resolution;
-			}
-			vector<float>::iterator col_iter = vec.begin()+block;
-			for (int i=0; i<resolution; i++){
-				haar(col_iter,w,resolution,true);
-				col_iter += 1;
-			}
-			w /= 2;
+	int w = resolution;
+	
+	while (w>64)	{
+		vector<float>::iterator row_iter = vec.begin();
+		for (int i=0; i<resolution; i++){
+			haar(row_iter,w,resolution,false);
+			row_iter += resolution;
 		}
+		vector<float>::iterator col_iter = vec.begin();
+		for (int i=0; i<resolution; i++){
+			haar(col_iter,w,resolution,true);
+			col_iter += 1;
+		}
+		w /= 2;
 	}
 }
 
@@ -216,8 +214,8 @@ void specialKey(int key,int x,int y) {
 void init() {
 	
 	
-	width = 680;
-	height = 880;
+	width = 256;
+	height = 256;
 	
 	trans_y = 0;
 	
@@ -271,6 +269,40 @@ void display(){
 			image[3*i+2] += min(blue_matrix[ind][i]*weight, 1.0f) * 255.0f;
 		}
 	}
+	
+	
+	/*
+	char* filename ="environment_maps/Grace/grace_cross2.png";
+	vector<unsigned char> image; //the raw pixels
+	lodepng::decode(image, width, height, filename);
+	
+	vector<float> red;
+	vector<float> green;
+	vector<float> blue;
+	
+	for(unsigned int j=0; j<image.size(); j+=4) {
+		red.push_back(image[j]/255.0f);
+		//green.push_back(image[j+1]/255.0f);
+		//blue.push_back(image[j+2]/255.0f);
+		green.push_back(0.0f);
+		blue.push_back(0.0f);
+	}
+	image.clear();
+	
+	haar2d(red);
+	//haar2d(green);
+	//haar2d(blue);
+	
+	image.reserve(3*width*height);
+	memset(&image[0], 0, 3*width*height);
+	for (unsigned int i=0; i<width*height; i++) {
+		image[3*i] += min(red[i], 1.0f) * 255.0f;
+		image[3*i+1] += min(green[i], 1.0f) * 255.0f;
+		image[3*i+2] += min(blue[i], 1.0f) * 255.0f;
+	}
+	*/
+	
+	
 	
 	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
