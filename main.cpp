@@ -39,6 +39,8 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 
+int pic;
+
 /*
 Light transport matricies for each color channel
 The array indexes the columns
@@ -102,7 +104,7 @@ void haar2d(vector<float>& vec){
 	
 	int w = resolution;
 	
-	while (w>64)	{
+	while (w>1)	{
 		vector<float>::iterator row_iter = vec.begin();
 		for (int i=0; i<resolution; i++){
 			haar(row_iter,w,resolution,false);
@@ -127,7 +129,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 	vector<unsigned char> image; //the raw pixels
 	
 	for (int i=0; i<num_files; i++) {
-		char filename[24];
+		char filename[50];
 		sprintf(filename, "%s/demo%02d.png", folder, i);
 		
 		lodepng::decode(image, width, height, filename);
@@ -147,6 +149,10 @@ void build_environment_vector(char *folder) {
 	
 	vector<unsigned char> image; //the raw pixels
 	
+	vector<float> red_env_face;
+	vector<float> green_env_face;
+	vector<float> blue_env_face;
+	
 	for (unsigned int i=0; i<NUM_FACES; i++) {
 		char filename[50];
 		sprintf(filename, "environment_maps/%s/%s%d.png", folder, folder, i);
@@ -154,46 +160,50 @@ void build_environment_vector(char *folder) {
 		lodepng::decode(image, resolution, resolution, filename);
 
 		for(unsigned int j=0; j<image.size(); j+=4) {
-			red_env.push_back(image[j]/255.0f);
-			green_env.push_back(image[j+1]/255.0f);
-			blue_env.push_back(image[j+2]/255.0f);
+			red_env_face.push_back(image[j]/255.0f);
+			green_env_face.push_back(image[j+1]/255.0f);
+			blue_env_face.push_back(image[j+2]/255.0f);
 		}
 		image.clear();
-	}
-	
-	/* Downsample to desired resolution */
-	vector<float> new_red;
-	vector<float> new_green;
-	vector<float> new_blue;
-	while (resolution > env_resolution) {
-		resolution /= 2;
-		for (unsigned int y=0; y<resolution; y++) {
-			for (unsigned int x=0; x<resolution; x++){
-				int p0 = 2*x + 4*y*resolution;
-				int p1 = p0 + 1;
-				int p2 = p0 + 2*resolution;
-				int p3 = p0 + 2*resolution + 1;
-				
-				//cout << p0<<" "<<p1<<" "<<p2<<" "<<p3<<endl;
-				
-				float ave;
-				ave = red_env[p0] + red_env[p1] + red_env[p2] + red_env[p3];
-				ave /= 4.0f;
-				new_red.push_back(ave);
-				ave = green_env[p0] + green_env[p1] + green_env[p2] + green_env[p3];
-				ave /= 4.0f;
-				new_green.push_back(ave);
-				ave = blue_env[p0] + blue_env[p1] + blue_env[p2] + blue_env[p3];
-				ave /= 4.0f;
-				new_blue.push_back(ave);
+		
+		/* Downsample to desired resolution */
+		vector<float> new_red;
+		vector<float> new_green;
+		vector<float> new_blue;
+		while (resolution > env_resolution) {
+			resolution /= 2;
+			for (unsigned int y=0; y<resolution; y++) {
+				for (unsigned int x=0; x<resolution; x++){
+					int p0 = 2*x + 4*y*resolution;
+					int p1 = p0 + 1;
+					int p2 = p0 + 2*resolution;
+					int p3 = p0 + 2*resolution + 1;
+
+					float ave;
+					ave = red_env_face[p0] + red_env_face[p1] + red_env_face[p2] + red_env_face[p3];
+					ave /= 4.0f;
+					new_red.push_back(ave);
+					ave = green_env_face[p0] + green_env_face[p1] + green_env_face[p2] + green_env_face[p3];
+					ave /= 4.0f;
+					new_green.push_back(ave);
+					ave = blue_env_face[p0] + blue_env_face[p1] + blue_env_face[p2] + blue_env_face[p3];
+					ave /= 4.0f;
+					new_blue.push_back(ave);
+				}
 			}
+			red_env_face = new_red;
+			green_env_face = new_green;
+			blue_env_face = new_blue;
+			new_red.clear();
+			new_green.clear();
+			new_blue.clear();	
 		}
-		red_env = new_red;
-		green_env = new_green;
-		blue_env = new_blue;
-		new_red.clear();
-		new_green.clear();
-		new_blue.clear();	
+		red_env.insert(red_env.end(),red_env_face.begin(),red_env_face.end());
+		green_env.insert(green_env.end(),green_env_face.begin(),green_env_face.end());
+		blue_env.insert(blue_env.end(),blue_env_face.begin(),blue_env_face.end());
+		red_env_face.clear();
+		green_env_face.clear();
+		blue_env_face.clear();
 	}
 }
 
@@ -236,8 +246,8 @@ void keyboard(unsigned char key, int x, int y) {
 		case 'l':
 			break;
 		case 's':
-			cout << "Image saved!" << endl;
-			break;
+			pic++;
+			if (pic==6) pic=0;
 		case 'r':
 			glutReshapeWindow(width, height);
 			break;
@@ -266,18 +276,17 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	int res = 16;
-	width = 256/res;
-	height = 256/res;
+	width = 680;
+	height = 880;
 	trans_y = 0;
+	pic = 0;
 	
-	env_resolution = 256/res;
+	env_resolution = 128;
 	
 	char* temp = "test_data";
-	//build_transport_matrix(temp,2);
+	build_transport_matrix(temp,2);
 	temp = "Grace";
 	build_environment_vector(temp);
-	cout << red_env.size() << endl;
 	
 	lights.push_back(make_pair(0,1));
 	lights.push_back(make_pair(1,0));
@@ -316,7 +325,7 @@ void display(){
 	image.reserve(3*width*height);
 	memset(&image[0], 0, 3*width*height);
 	
-	/*Loop through the chosen lights and combine them with their weight 
+	/*Loop through the chosen lights and combine them with their weight */
 	for (unsigned int j=0; j<lights.size(); j++) {
 		int ind = lights[j].first;
 		float weight = lights[j].second;
@@ -348,12 +357,13 @@ void display(){
 	haar2d(red);
 	//haar2d(green);
 	//haar2d(blue);
-	*/
+	
 	for (unsigned int i=0; i<width*height; i++) {
 		image[3*i] += min(red_env[i], 1.0f) * 255.0f;
 		image[3*i+1] += min(green_env[i], 1.0f) * 255.0f;
 		image[3*i+2] += min(blue_env[i], 1.0f) * 255.0f;
 	}
+	*/
 	
 	
 	/* Draw to screen */
