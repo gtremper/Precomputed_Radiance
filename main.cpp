@@ -25,7 +25,6 @@ typedef glm::mat3 mat3;
 
 using namespace std;
 
-
 /* Paramaters */
 unsigned int height;
 unsigned int width;
@@ -48,9 +47,9 @@ vector<float>* red_matrix;
 vector<float>* green_matrix;
 vector<float>* blue_matrix;
 
-vector<float>* red_env;
-vector<float>* green_env;
-vector<float>* blue_env;
+vector<float> red_env;
+vector<float> green_env;
+vector<float> blue_env;
 
 vector< pair<int,float> > lights;
 
@@ -142,6 +141,62 @@ void build_transport_matrix(char *folder, const int num_files) {
 	}
 }
 
+void build_environment_vector(char *folder) {
+	unsigned int NUM_FACES = 6;
+	unsigned int resolution = 256;
+	
+	vector<unsigned char> image; //the raw pixels
+	
+	for (unsigned int i=0; i<NUM_FACES; i++) {
+		char filename[50];
+		sprintf(filename, "environment_maps/%s/%s%d.png", folder, folder, i);
+		
+		lodepng::decode(image, resolution, resolution, filename);
+
+		for(unsigned int j=0; j<image.size(); j+=4) {
+			red_env.push_back(image[j]/255.0f);
+			green_env.push_back(image[j+1]/255.0f);
+			blue_env.push_back(image[j+2]/255.0f);
+		}
+		image.clear();
+	}
+	
+	/* Downsample to desired resolution */
+	vector<float> new_red;
+	vector<float> new_green;
+	vector<float> new_blue;
+	while (resolution > env_resolution) {
+		resolution /= 2;
+		for (unsigned int y=0; y<resolution; y++) {
+			for (unsigned int x=0; x<resolution; x++){
+				int p0 = 2*x + 4*y*resolution;
+				int p1 = p0 + 1;
+				int p2 = p0 + 2*resolution;
+				int p3 = p0 + 2*resolution + 1;
+				
+				//cout << p0<<" "<<p1<<" "<<p2<<" "<<p3<<endl;
+				
+				float ave;
+				ave = red_env[p0] + red_env[p1] + red_env[p2] + red_env[p3];
+				ave /= 4.0f;
+				new_red.push_back(ave);
+				ave = green_env[p0] + green_env[p1] + green_env[p2] + green_env[p3];
+				ave /= 4.0f;
+				new_green.push_back(ave);
+				ave = blue_env[p0] + blue_env[p1] + blue_env[p2] + blue_env[p3];
+				ave /= 4.0f;
+				new_blue.push_back(ave);
+			}
+		}
+		red_env = new_red;
+		green_env = new_green;
+		blue_env = new_blue;
+		new_red.clear();
+		new_green.clear();
+		new_blue.clear();	
+	}
+}
+
 
 
 /* Mouse Functions */
@@ -170,8 +225,8 @@ void mouse(int x, int y) {
 /* Everything below here is openGL boilerplate */
 
 void reshape(int w, int h){
-	width = w;
-	height = h;
+	//width = w;
+	//height = h;
 	glViewport(0, 0, w, h);
 	glutPostRedisplay();
 }
@@ -192,7 +247,6 @@ void keyboard(unsigned char key, int x, int y) {
 			delete [] blue_matrix;
 			exit(0);
 			break;
-
 	}
 	glutPostRedisplay();
 }
@@ -212,15 +266,18 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	
-	
-	width = 256;
-	height = 256;
-	
+	int res = 16;
+	width = 256/res;
+	height = 256/res;
 	trans_y = 0;
 	
+	env_resolution = 256/res;
+	
 	char* temp = "test_data";
-	build_transport_matrix(temp,2);
+	//build_transport_matrix(temp,2);
+	temp = "Grace";
+	build_environment_vector(temp);
+	cout << red_env.size() << endl;
 	
 	lights.push_back(make_pair(0,1));
 	lights.push_back(make_pair(1,0));
@@ -259,7 +316,7 @@ void display(){
 	image.reserve(3*width*height);
 	memset(&image[0], 0, 3*width*height);
 	
-	/*Loop through the chosen lights and combine them with their weight */
+	/*Loop through the chosen lights and combine them with their weight 
 	for (unsigned int j=0; j<lights.size(); j++) {
 		int ind = lights[j].first;
 		float weight = lights[j].second;
@@ -269,7 +326,6 @@ void display(){
 			image[3*i+2] += min(blue_matrix[ind][i]*weight, 1.0f) * 255.0f;
 		}
 	}
-	
 	
 	/*
 	char* filename ="environment_maps/Grace/grace_cross2.png";
@@ -292,16 +348,12 @@ void display(){
 	haar2d(red);
 	//haar2d(green);
 	//haar2d(blue);
-	
-	image.reserve(3*width*height);
-	memset(&image[0], 0, 3*width*height);
-	for (unsigned int i=0; i<width*height; i++) {
-		image[3*i] += min(red[i], 1.0f) * 255.0f;
-		image[3*i+1] += min(green[i], 1.0f) * 255.0f;
-		image[3*i+2] += min(blue[i], 1.0f) * 255.0f;
-	}
 	*/
-	
+	for (unsigned int i=0; i<width*height; i++) {
+		image[3*i] += min(red_env[i], 1.0f) * 255.0f;
+		image[3*i+1] += min(green_env[i], 1.0f) * 255.0f;
+		image[3*i+2] += min(blue_env[i], 1.0f) * 255.0f;
+	}
 	
 	
 	/* Draw to screen */
