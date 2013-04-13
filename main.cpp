@@ -198,6 +198,12 @@ void build_environment_vector(char *folder) {
 			new_green.clear();
 			new_blue.clear();	
 		}
+		/* Haar transform environment map */
+		//haar2d(red_env_face);
+		//haar2d(green_env_face);
+		//haar2d(blue_env_face);
+		
+		/*Insert this side of cubemap into envirornmap vector */
 		red_env.insert(red_env.end(),red_env_face.begin(),red_env_face.end());
 		green_env.insert(green_env.end(),green_env_face.begin(),green_env_face.end());
 		blue_env.insert(blue_env.end(),blue_env_face.begin(),blue_env_face.end());
@@ -281,7 +287,7 @@ void init() {
 	trans_y = 0;
 	pic = 0;
 	
-	env_resolution = 128;
+	env_resolution = 32;
 	
 	char* temp = "test_data";
 	build_transport_matrix(temp,2);
@@ -325,7 +331,7 @@ void display(){
 	image.reserve(3*width*height);
 	memset(&image[0], 0, 3*width*height);
 	
-	/*Loop through the chosen lights and combine them with their weight */
+	/* Loop through the chosen lights and combine them with their weight */
 	for (unsigned int j=0; j<lights.size(); j++) {
 		int ind = lights[j].first;
 		float weight = lights[j].second;
@@ -337,33 +343,15 @@ void display(){
 	}
 	
 	/*
-	char* filename ="environment_maps/Grace/grace_cross2.png";
-	vector<unsigned char> image; //the raw pixels
-	lodepng::decode(image, width, height, filename);
-	
-	vector<float> red;
-	vector<float> green;
-	vector<float> blue;
-	
-	for(unsigned int j=0; j<image.size(); j+=4) {
-		red.push_back(image[j]/255.0f);
-		//green.push_back(image[j+1]/255.0f);
-		//blue.push_back(image[j+2]/255.0f);
-		green.push_back(0.0f);
-		blue.push_back(0.0f);
-	}
-	image.clear();
-	
-	haar2d(red);
-	//haar2d(green);
-	//haar2d(blue);
-	
+	width = 32;
+	height = 32;
 	for (unsigned int i=0; i<width*height; i++) {
 		image[3*i] += min(red_env[i], 1.0f) * 255.0f;
 		image[3*i+1] += min(green_env[i], 1.0f) * 255.0f;
 		image[3*i+2] += min(blue_env[i], 1.0f) * 255.0f;
 	}
 	*/
+	
 	
 	
 	/* Draw to screen */
