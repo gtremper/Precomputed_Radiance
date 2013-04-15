@@ -49,6 +49,10 @@ vector<float>* red_matrix;
 vector<float>* green_matrix;
 vector<float>* blue_matrix;
 
+/*
+Environment map for lighting
+This can also just be an area light
+*/
 vector<float> red_env;
 vector<float> green_env;
 vector<float> blue_env;
@@ -284,6 +288,8 @@ void specialKey(int key,int x,int y) {
 void init() {
 	width = 680;
 	height = 880;
+	//width = 32;
+	//height = 32;
 	trans_y = 0;
 	pic = 0;
 	
@@ -342,21 +348,36 @@ void display(){
 		}
 	}
 	
-	/*
-	width = 32;
-	height = 32;
-	for (unsigned int i=0; i<width*height; i++) {
+	/* Draw to screen */
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
+	glTexCoord2d(0, 0); glVertex3d(-1, 1, 0);
+	glTexCoord2d(1, 0); glVertex3d(1, 1, 0);
+	glTexCoord2d(1, 1); glVertex3d(1, -1, 0);
+	glEnd();
+
+	glutSwapBuffers();
+}
+
+void display_env(){
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	/* initialize pixel vector to set as texture */
+	vector<unsigned char> image;
+	image.reserve(3*width*height*6);
+	memset(&image[0], 0, 3*width*height*6);
+	
+	for (unsigned int i=0; i<width*height*6; i++) {
 		image[3*i] += min(red_env[i], 1.0f) * 255.0f;
 		image[3*i+1] += min(green_env[i], 1.0f) * 255.0f;
 		image[3*i+2] += min(blue_env[i], 1.0f) * 255.0f;
 	}
-	*/
-	
-	
 	
 	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
-		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[3*width*height*pic]);
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
 	glTexCoord2d(0, 0); glVertex3d(-1, 1, 0);
