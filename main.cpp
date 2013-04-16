@@ -59,9 +59,9 @@ vector<float> red_env;
 vector<float> green_env;
 vector<float> blue_env;
 
-vector< pair<unsigned int,float> > red_lights;
-vector< pair<unsigned int,float> > green_lights;
-vector< pair<unsigned int,float> > blue_lights;
+vector< pair<int,float> > red_lights;
+vector< pair<int,float> > green_lights;
+vector< pair<int,float> > blue_lights;
 
 /*
 1d haar transform. Vec must be a power of 2 length
@@ -139,9 +139,12 @@ void build_transport_matrix(char *folder, const int num_files) {
 	/* Load files into matrix */
 	for (int i=0; i<num_files; i++) {
 		char filename[50];
-		sprintf(filename, "%s/demo%02d.png", folder, i);
+		sprintf(filename, "%s/%04d.png", folder, i);
 		
-		lodepng::decode(image, width, height, filename);
+		unsigned error = lodepng::decode(image, width, height, filename);
+		
+		if(error) std::cout << "decoder error " << error
+		 	<< ": " << lodepng_error_text(error) << std::endl;
 
 		for(unsigned int j=0; j<image.size(); j+=4) {
 			red_matrix[i].push_back(image[j]/255.0f);
@@ -291,31 +294,17 @@ void shift_env_map(int num) {
 void shift_area_light(int amount) {
 	for (unsigned int i=0; i<red_lights.size(); i++) {
 		red_lights[i].first += amount;
-		if (red_lights[i].first >= red_env.size()){
-			red_lights[i].first -= red_env.size();
-		}
-		if (red_lights[i].first < 0){
-			red_lights[i].first += red_env.size();
-		}
+		red_lights[i].first = red_lights[i].first % red_env.size();
 	}
 	for (unsigned int i=0; i<green_lights.size(); i++) {
-		green_lights[i].first += amount;
-		if (green_lights[i].first >= green_env.size()){
-			green_lights[i].first -= green_env.size();
-		}
-		if (green_lights[i].first < 0){
-			green_lights[i].first += green_env.size();
-		}
+		green_lights[i].first += (amount+green_env.size()) % (green_env.size());
 	}
 	for (unsigned int i=0; i<blue_lights.size(); i++) {
-		blue_lights[i].first += amount;
-		if (blue_lights[i].first >= green_env.size()){
-			blue_lights[i].first -= green_env.size();
-		}
-		if (blue_lights[i].first < 0){
-			blue_lights[i].first += green_env.size();
-		}
+		blue_lights[i].first += (amount+blue_env.size()) % (blue_env.size());
 	}
+	cout << red_lights[0].first << endl;
+	cout << green_lights[0].first << endl;
+	cout << blue_lights[0].first << endl;
 }
 
 /* Mouse Functions */
@@ -401,16 +390,18 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	width = 680;
-	height = 880;
+	width = 512;
+	height = 512;
 	//width = 64;
 	//height = 64;
 	trans_y = 0;
 	
-	env_resolution = 64;
+	env_resolution = 4;
 	
-	char* temp = "test_data";
-	build_transport_matrix(temp,2);
+	char* temp = "tree_images";
+	cout << "Building trasport matrix...   ";
+	build_transport_matrix(temp,96);
+	cout << "done" << endl;
 	temp = "Grace";
 	build_environment_vector(temp);
 
@@ -437,11 +428,18 @@ void init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 	glDisable(GL_ALPHA_TEST);
+	
+	
+	
+	red_lights.push_back(make_pair(0,1));
+	green_lights.push_back(make_pair(0,1));
+	blue_lights.push_back(make_pair(0,1));
+	
 }
 
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
-	cout << trans_y << endl;
+	//cout << trans_y << endl;
 	
 	/* Calculate weights for 'lights' vector */
 	//calculate_lights_used();
