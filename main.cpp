@@ -255,23 +255,34 @@ void calculate_lights_used(){
 	green_lights.clear();
 	blue_lights.clear();
 	
-	#ifdef USEHAAR
 	/* make copy to use with haar */
 	vector<float> red_haar(red_env);
 	vector<float> green_haar(green_env);
 	vector<float> blue_haar(blue_env);
 	
+	#ifdef USEHAAR
 	haar2d(red_haar);
 	haar2d(green_haar);
 	haar2d(blue_haar);
 	#endif
 	
 	/* Create new lights vectors. This just uses all of them right now */
+	int count = 0;
 	for (unsigned int i=0; i<red_env.size(); i++) {
-		red_lights.push_back( make_pair(i, 0.03*red_env[i]) );
-		green_lights.push_back( make_pair(i, 0.03*green_env[i]) );
-		blue_lights.push_back( make_pair(i, 0.03*blue_env[i]) );
+		if (red_haar[i]>EPSILON) {
+			red_lights.push_back( make_pair(i, 0.03*red_haar[i]) );
+			count++;
+		}
+		if (green_haar[i]>EPSILON) {
+			green_lights.push_back( make_pair(i, 0.03*green_haar[i]) );
+			count++;
+		}
+		if (blue_haar[i]>EPSILON) {
+			blue_lights.push_back( make_pair(i, 0.03*blue_haar[i]) );
+			count++;
+		}
 	}
+	cout <<"NUMZERO: " << red_env.size()*3 - count << endl;
 	
 }
 
@@ -411,7 +422,6 @@ void init() {
     
 	glGenTextures(1, &texture);
 	glEnable(GL_TEXTURE_2D) ;
-	glBindTexture(GL_TEXTURE_2D, texture);
 	glActiveTexture(GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -435,6 +445,72 @@ void init() {
 	//green_lights.push_back(make_pair(0,1));
 	//blue_lights.push_back(make_pair(0,1));
 	
+}
+
+/* Draws the environment map in the corner of the screen */
+void draw_env_map() {
+	vector<unsigned char> envmap;
+	for (unsigned int i=0; i<red_env.size(); i++) {
+		envmap.push_back( red_env[i]* 255.0f);
+		envmap.push_back( green_env[i]* 255.0f);
+		envmap.push_back( blue_env[i]* 255.0f);
+	}
+	
+	int offset = env_resolution*env_resolution*3;
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[0]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.5, -.25, .1);
+	glTexCoord2d(0, 0); glVertex3d(.5, 0, .1);
+	glTexCoord2d(1, 0); glVertex3d(.75, 0, .1);
+	glTexCoord2d(1, 1); glVertex3d(.75, -.25, .1);
+	glEnd();
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.25, -.5, .1);
+	glTexCoord2d(0, 0); glVertex3d(.25, -.25, .1);
+	glTexCoord2d(1, 0); glVertex3d(.5, -.25, .1);
+	glTexCoord2d(1, 1); glVertex3d(.5, -.5, .1);
+	glEnd();
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*2]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.5, -.5, .1);
+	glTexCoord2d(0, 0); glVertex3d(.5, -.25, .1);
+	glTexCoord2d(1, 0); glVertex3d(.75, -.25, .1);
+	glTexCoord2d(1, 1); glVertex3d(.75, -.5, .1);
+	glEnd();
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*3]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.75, -.5, .1);
+	glTexCoord2d(0, 0); glVertex3d(.75, -.25, .1);
+	glTexCoord2d(1, 0); glVertex3d(1, -.25, .1);
+	glTexCoord2d(1, 1); glVertex3d(1, -.5, .1);
+	glEnd();
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*4]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.5, -.75, .1);
+	glTexCoord2d(0, 0); glVertex3d(.5, -.5, .1);
+	glTexCoord2d(1, 0); glVertex3d(.75, -.5, .1);
+	glTexCoord2d(1, 1); glVertex3d(.75, -.75, .1);
+	glEnd();
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*5]);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 1); glVertex3d(.5, -1, .1);
+	glTexCoord2d(0, 0); glVertex3d(.5, -.75, .1);
+	glTexCoord2d(1, 0); glVertex3d(.75, -.75, .1);
+	glTexCoord2d(1, 1); glVertex3d(.75, -1, .1);
+	glEnd();
 }
 
 void display(){
@@ -476,7 +552,6 @@ void display(){
 		image.push_back( min(pre_image[3*i+2], 1.0f) * 255.0f);
 	}
 	
-	
 	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
 		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
@@ -486,35 +561,10 @@ void display(){
 	glTexCoord2d(1, 0); glVertex3d(1, 1, 0);
 	glTexCoord2d(1, 1); glVertex3d(1, -1, 0);
 	glEnd();
-
-	glutSwapBuffers();
-}
-
-/* For debugging only */
-void display2(){
-	glClear(GL_COLOR_BUFFER_BIT);
 	
-	/* initialize pixel vector to set as texture */
-	vector<unsigned char> image;
-	image.reserve(3*width*height*6);
-	memset(&image[0], 0, 3*width*height*6);
+	/* Draw environment map */
+	draw_env_map();
 	
-	for (unsigned int i=0; i<width*height*6; i++) {
-		image[3*i] += min(red_env[i], 1.0f) * 255.0f;
-		image[3*i+1] += min(green_env[i], 1.0f) * 255.0f;
-		image[3*i+2] += min(blue_env[i], 1.0f) * 255.0f;
-	}
-	
-	/* Draw to screen */
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
-		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
-	glBegin(GL_QUADS);
-	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
-	glTexCoord2d(0, 0); glVertex3d(-1, 1, 0);
-	glTexCoord2d(1, 0); glVertex3d(1, 1, 0);
-	glTexCoord2d(1, 1); glVertex3d(1, -1, 0);
-	glEnd();
-
 	glutSwapBuffers();
 }
 
