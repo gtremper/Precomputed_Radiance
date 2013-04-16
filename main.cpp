@@ -20,7 +20,8 @@
 #define EPSILON 0.00000001
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
-
+/* Define this if you want to use haar transform */
+//#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -161,9 +162,11 @@ void build_transport_matrix(char *folder, const int num_files) {
 			blue_row.push_back(blue_matrix[i][pixel]);
 		}
 		
-		//haar2d(red_row);
-		//haar2d(green_row);
-		//haar2d(blue_row);
+		#ifdef USEHAAR
+		haar2d(red_row);
+		haar2d(green_row);
+		haar2d(blue_row);
+		#endif
 		
 		for (int i=0; i<num_files; i++) {
 			red_matrix[i][pixel] = red_row[i];
