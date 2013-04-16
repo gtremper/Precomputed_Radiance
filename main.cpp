@@ -132,6 +132,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 	
 	vector<unsigned char> image; //the raw pixels
 	
+	/* Load files into matrix */
 	for (int i=0; i<num_files; i++) {
 		char filename[50];
 		sprintf(filename, "%s/demo%02d.png", folder, i);
@@ -144,6 +145,31 @@ void build_transport_matrix(char *folder, const int num_files) {
 			blue_matrix[i].push_back(image[j+2]/255.0f);
 		}
 		image.clear();
+	}
+	
+	/* Haar transform rows of matrix */
+	vector<float> red_row;
+	vector<float> green_row;
+	vector<float> blue_row;
+	for (int pixel=0; pixel<width*height; pixel++) {
+		for (int i=0; i<num_files; i++) {
+			red_row.push_back(red_matrix[i][pixel]);
+			green_row.push_back(green_matrix[i][pixel]);
+			blue_row.push_back(blue_matrix[i][pixel]);
+		}
+		
+		//haar2d(red_row);
+		//haar2d(green_row);
+		//haar2d(blue_row);
+		
+		for (int i=0; i<num_files; i++) {
+			red_matrix[i][pixel] = red_row[i];
+			green_matrix[i][pixel] = green_row[i];
+			blue_matrix[i][pixel] = blue_row[i];
+		}
+		red_row.clear();
+		green_row.clear();
+		blue_row.clear();
 	}
 }
 
