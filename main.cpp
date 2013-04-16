@@ -20,6 +20,8 @@
 #define EPSILON 0.00000001
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
+
+
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
 
@@ -39,7 +41,6 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 
-int pic;
 
 /*
 Light transport matricies for each color channel
@@ -57,7 +58,9 @@ vector<float> red_env;
 vector<float> green_env;
 vector<float> blue_env;
 
-vector< pair<int,float> > lights;
+vector< pair<int,float> > red_lights;
+vector< pair<int,float> > green_lights;
+vector< pair<int,float> > blue_lights;
 
 /*
 1d haar transform. Vec must be a power of 2 length
@@ -151,7 +154,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 	vector<float> red_row;
 	vector<float> green_row;
 	vector<float> blue_row;
-	for (int pixel=0; pixel<width*height; pixel++) {
+	for (unsigned int pixel=0; pixel<width*height; pixel++) {
 		for (int i=0; i<num_files; i++) {
 			red_row.push_back(red_matrix[i][pixel]);
 			green_row.push_back(green_matrix[i][pixel]);
@@ -228,10 +231,6 @@ void build_environment_vector(char *folder) {
 			new_green.clear();
 			new_blue.clear();	
 		}
-		/* Haar transform environment map */
-		//haar2d(red_env_face);
-		//haar2d(green_env_face);
-		//haar2d(blue_env_face);
 		
 		/*Insert this side of cubemap into envirornmap vector */
 		red_env.insert(red_env.end(),red_env_face.begin(),red_env_face.end());
@@ -242,6 +241,23 @@ void build_environment_vector(char *folder) {
 		blue_env_face.clear();
 	}
 }
+
+/* Calculate values for light vector. */
+void calculate_lights_used(){
+	red_lights.clear();
+	green_lights.clear();
+	blue_lights.clear();
+	
+	red_lights.push_back(make_pair(0,1.0f-trans_y));
+	red_lights.push_back(make_pair(1,trans_y));
+	green_lights.push_back(make_pair(0,1.0f-trans_y));
+	green_lights.push_back(make_pair(1,trans_y));
+	blue_lights.push_back(make_pair(0,1.0f-trans_y));
+	blue_lights.push_back(make_pair(1,trans_y));
+}
+
+
+
 
 /* Shift environment map to provide dynamic lighting */
 /* num is the number of rows to shift the picture over */
@@ -276,8 +292,7 @@ void mouse(int x, int y) {
 	trans_y -= diffy*0.005f;
 	trans_y = min(1.0f,trans_y);
 	trans_y = max(0.0f,trans_y);
-	lights[0].second = 1.0f-trans_y;
-	lights[1].second = trans_y;
+	
 	glutPostRedisplay();
 }
 
@@ -296,8 +311,7 @@ void keyboard(unsigned char key, int x, int y) {
 		case 'l':
 			break;
 		case 's':
-			pic++;
-			if (pic==6) pic=0;
+			break;
 		case 'r':
 			glutReshapeWindow(width, height);
 			break;
@@ -328,22 +342,18 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	//width = 680;
-	//height = 880;
-	width = 64;
-	height = 64;
+	width = 680;
+	height = 880;
+	//width = 64;
+	//height = 64;
 	trans_y = 0;
-	pic = 0;
 	
 	env_resolution = 64;
 	
 	char* temp = "test_data";
-	//build_transport_matrix(temp,2);
+	build_transport_matrix(temp,2);
 	temp = "Grace";
 	build_environment_vector(temp);
-	
-	lights.push_back(make_pair(0,1));
-	lights.push_back(make_pair(1,0));
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -370,9 +380,12 @@ void init() {
 	glDisable(GL_ALPHA_TEST);
 }
 
-void display2(){
+void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	cout << trans_y << endl;
+	
+	/* Calculate weights for 'lights' vector */
+	calculate_lights_used();
 	
 	/* initialize pixel vector to set as texture */
 	vector<unsigned char> image;
@@ -380,13 +393,19 @@ void display2(){
 	memset(&image[0], 0, 3*width*height);
 	
 	/* Loop through the chosen lights and combine them with their weight */
-	for (unsigned int j=0; j<lights.size(); j++) {
-		int ind = lights[j].first;
-		float weight = lights[j].second;
+	for (unsigned int j=0; j<red_lights.size(); j++) {
+		int r_ind = red_lights[j].first;
+		int g_ind = green_lights[j].first;
+		int b_ind = blue_lights[j].first;
+		
+		float r_weight = red_lights[j].second;
+		float g_weight = green_lights[j].second;
+		float b_weight = blue_lights[j].second;
+		
 		for (unsigned int i=0; i<width*height; i++) {
-			image[3*i] += min(red_matrix[ind][i]*weight, 1.0f) * 255.0f;
-			image[3*i+1] += min(green_matrix[ind][i]*weight, 1.0f) * 255.0f;
-			image[3*i+2] += min(blue_matrix[ind][i]*weight, 1.0f) * 255.0f;
+			image[3*i] += min(red_matrix[r_ind][i]*r_weight, 1.0f) * 255.0f;
+			image[3*i+1] += min(green_matrix[g_ind][i]*g_weight, 1.0f) * 255.0f;
+			image[3*i+2] += min(blue_matrix[b_ind][i]*b_weight, 1.0f) * 255.0f;
 		}
 	}
 	
@@ -404,7 +423,7 @@ void display2(){
 }
 
 /* For debugging only */
-void display(){
+void display2(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	/* initialize pixel vector to set as texture */
@@ -420,7 +439,7 @@ void display(){
 	
 	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
-		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[3*width*height*pic]);
+		0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 1); glVertex3d(-1, -1, 0);
 	glTexCoord2d(0, 0); glVertex3d(-1, 1, 0);
