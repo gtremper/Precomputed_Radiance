@@ -255,12 +255,12 @@ void calculate_lights_used(){
 	green_lights.clear();
 	blue_lights.clear();
 	
+	#ifdef USEHAAR
 	/* make copy to use with haar */
 	vector<float> red_haar(red_env);
 	vector<float> green_haar(green_env);
 	vector<float> blue_haar(blue_env);
 	
-	#ifdef USEHAAR
 	haar2d(red_haar);
 	haar2d(green_haar);
 	haar2d(blue_haar);
@@ -268,9 +268,9 @@ void calculate_lights_used(){
 	
 	/* Create new lights vectors. This just uses all of them right now */
 	for (unsigned int i=0; i<red_env.size(); i++) {
-		red_lights.push_back( make_pair(i,red_env[i]) );
-		green_lights.push_back( make_pair(i,green_env[i]) );
-		blue_lights.push_back( make_pair(i,blue_env[i]) );
+		red_lights.push_back( make_pair(i, 0.03*red_env[i]) );
+		green_lights.push_back( make_pair(i, 0.03*green_env[i]) );
+		blue_lights.push_back( make_pair(i, 0.03*blue_env[i]) );
 	}
 	
 }
@@ -431,9 +431,9 @@ void init() {
 	
 	
 	
-	red_lights.push_back(make_pair(0,1));
-	green_lights.push_back(make_pair(0,1));
-	blue_lights.push_back(make_pair(0,1));
+	//red_lights.push_back(make_pair(0,1));
+	//green_lights.push_back(make_pair(0,1));
+	//blue_lights.push_back(make_pair(0,1));
 	
 }
 
@@ -442,12 +442,13 @@ void display(){
 	//cout << trans_y << endl;
 	
 	/* Calculate weights for 'lights' vector */
-	//calculate_lights_used();
+	calculate_lights_used();
 	
 	/* initialize pixel vector to set as texture */
-	vector<unsigned char> image;
-	image.reserve(3*width*height);
-	memset(&image[0], 0, 3*width*height);
+	vector<float> pre_image;
+	pre_image.reserve(3*width*height);
+	memset(&pre_image[0], 0, 3*width*height*sizeof(float));
+	
 	
 	/* Loop through the chosen lights and combine them with their weight */
 	for (unsigned int j=0; j<red_lights.size(); j++) {
@@ -460,11 +461,21 @@ void display(){
 		float b_weight = blue_lights[j].second;
 		
 		for (unsigned int i=0; i<width*height; i++) {
-			image[3*i] += min(red_matrix[r_ind][i]*r_weight, 1.0f) * 255.0f;
-			image[3*i+1] += min(green_matrix[g_ind][i]*g_weight, 1.0f) * 255.0f;
-			image[3*i+2] += min(blue_matrix[b_ind][i]*b_weight, 1.0f) * 255.0f;
+			pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
+			pre_image[3*i+1] += green_matrix[g_ind][i]*g_weight;
+			pre_image[3*i+2] += blue_matrix[b_ind][i]*b_weight;
 		}
 	}
+	
+	vector<unsigned char> image;
+	image.reserve(3*width*height);
+	
+	for (unsigned int i=0; i<width*height; i++) {
+		image.push_back( min(pre_image[3*i], 1.0f) * 255.0f);
+		image.push_back( min(pre_image[3*i+1], 1.0f) * 255.0f);
+		image.push_back( min(pre_image[3*i+2], 1.0f) * 255.0f);
+	}
+	
 	
 	/* Draw to screen */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
