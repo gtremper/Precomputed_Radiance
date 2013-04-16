@@ -14,10 +14,10 @@
 //////// scene /////////////////
 ////////////////////////////////
 #version 3.7;
-camera{location<0,0.75,-1.1> look_at<0,0.4,0>}
+camera{location<0,1.5,-1> look_at<0,0.4,0>}
 ////////////////////////////////
-#declare xclock = mod((clock*4) / Resolution,1);
-#declare yclock = floor((clock*4) / 16) / 4;
+#declare xclock = mod((clock*4) / Resolution, 1);
+#declare yclock = floor((clock*4) / Resolution) / 4;
 #warning str(xclock, 5, 2)
 #warning str(yclock, 5, 2)
 #warning str(-2+4*xclock, 5, 2)
@@ -25,13 +25,12 @@ camera{location<0,0.75,-1.1> look_at<0,0.4,0>}
 light_source
 {
   <2,.1+4*yclock,-2+4*xclock>
-  color rgb 2.0
-  area_light <0, 1, 0>, <0, 0, 1>, 2, 2
-  adaptive 1
+  color rgb 1.0
 }
 ////////////////////////////////
-background{color rgb 0}
-plane{y,0 pigment{checker color rgb 0.7 color rgb 0.3 scale 1}}
+background {color rgb 0}
+box { <-1, 0, -1>, <1, 0, 1> pigment{checker color rgb 0.7 color rgb 0.3 scale 1}
+        finish {ambient 0} }
 ////////////////////////////////
 //////// tree //////////////////
 ////////////////////////////////
@@ -164,4 +163,4 @@ union
 ////////////////////////////////
 ////////////////////////////////
 
-object{tree}
+object{tree finish{ ambient 0} }
