@@ -59,9 +59,9 @@ vector<float> red_env;
 vector<float> green_env;
 vector<float> blue_env;
 
-vector< pair<int,float> > red_lights;
-vector< pair<int,float> > green_lights;
-vector< pair<int,float> > blue_lights;
+vector< pair<unsigned int,float> > red_lights;
+vector< pair<unsigned int,float> > green_lights;
+vector< pair<unsigned int,float> > blue_lights;
 
 /*
 1d haar transform. Vec must be a power of 2 length
@@ -245,26 +245,36 @@ void build_environment_vector(char *folder) {
 	}
 }
 
-/* Calculate values for light vector. */
+/* Calculate values for light vector */
 void calculate_lights_used(){
+	/* Remove old values */
 	red_lights.clear();
 	green_lights.clear();
 	blue_lights.clear();
 	
-	red_lights.push_back(make_pair(0,1.0f-trans_y));
-	red_lights.push_back(make_pair(1,trans_y));
-	green_lights.push_back(make_pair(0,1.0f-trans_y));
-	green_lights.push_back(make_pair(1,trans_y));
-	blue_lights.push_back(make_pair(0,1.0f-trans_y));
-	blue_lights.push_back(make_pair(1,trans_y));
+	/* make copy to use with haar */
+	vector<float> red_haar(red_env);
+	vector<float> green_haar(green_env);
+	vector<float> blue_haar(blue_env);
+	
+	#ifdef USEHAAR
+	haar2d(red_haar);
+	haar2d(green_haar);
+	haar2d(blue_haar);
+	#endif
+	
+	/* Create new lights vectors. This just uses all of them right now */
+	for (unsigned int i=0; i<red_env.size(); i++) {
+		red_lights.push_back( make_pair(i,red_env[i]) );
+		green_lights.push_back( make_pair(i,green_env[i]) );
+		blue_lights.push_back( make_pair(i,blue_env[i]) );
+	}
+	
 }
-
-
-
 
 /* Shift environment map to provide dynamic lighting */
 /* num is the number of rows to shift the picture over */
-void shift_lighting(int num) {
+void shift_env_map(int num) {
 	int amount = env_resolution * num;
 	if (amount>0) {
 		rotate(red_env.begin(), red_env.begin() + amount, red_env.end());
@@ -277,6 +287,36 @@ void shift_lighting(int num) {
 	}
 }
 
+/* Thise is for moving around an area light */
+void shift_area_light(int amount) {
+	for (unsigned int i=0; i<red_lights.size(); i++) {
+		red_lights[i].first += amount;
+		if (red_lights[i].first >= red_env.size()){
+			red_lights[i].first -= red_env.size();
+		}
+		if (red_lights[i].first < 0){
+			red_lights[i].first += red_env.size();
+		}
+	}
+	for (unsigned int i=0; i<green_lights.size(); i++) {
+		green_lights[i].first += amount;
+		if (green_lights[i].first >= green_env.size()){
+			green_lights[i].first -= green_env.size();
+		}
+		if (green_lights[i].first < 0){
+			green_lights[i].first += green_env.size();
+		}
+	}
+	for (unsigned int i=0; i<blue_lights.size(); i++) {
+		blue_lights[i].first += amount;
+		if (blue_lights[i].first >= green_env.size()){
+			blue_lights[i].first -= green_env.size();
+		}
+		if (blue_lights[i].first < 0){
+			blue_lights[i].first += green_env.size();
+		}
+	}
+}
 
 /* Mouse Functions */
 void mouseClick(int button, int state, int x, int y) {
@@ -296,6 +336,17 @@ void mouse(int x, int y) {
 	trans_y = min(1.0f,trans_y);
 	trans_y = max(0.0f,trans_y);
 	
+	red_lights.clear();
+	green_lights.clear();
+	blue_lights.clear();
+	
+	red_lights.push_back(make_pair(0,1.0f-trans_y));
+	red_lights.push_back(make_pair(1,trans_y));
+	green_lights.push_back(make_pair(0,1.0f-trans_y));
+	green_lights.push_back(make_pair(1,trans_y));
+	blue_lights.push_back(make_pair(0,1.0f-trans_y));
+	blue_lights.push_back(make_pair(1,trans_y));
+	
 	glutPostRedisplay();
 }
 
@@ -311,12 +362,17 @@ void reshape(int w, int h){
 
 void keyboard(unsigned char key, int x, int y) {
 	switch(key){
-		case 'l':
+		case 'w':
+			shift_area_light(env_resolution);
+			break;
+		case 'a':
+			shift_area_light(-1);
 			break;
 		case 's':
+			shift_area_light(-env_resolution);
 			break;
-		case 'r':
-			glutReshapeWindow(width, height);
+		case 'd':
+			shift_area_light(1);
 			break;
 		case 27:  // Escape to quit
 			delete [] red_matrix;
@@ -331,12 +387,12 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKey(int key,int x,int y) {
 	switch(key) {
 		case 100: //left
-			shift_lighting(-2);
+			shift_env_map(-2);
 			break;
 		case 101: //up
 			break;
 		case 102: //right
-			shift_lighting(2);
+			shift_env_map(2);
 			break;
 		case 103: //down
 			break;
@@ -388,7 +444,7 @@ void display(){
 	cout << trans_y << endl;
 	
 	/* Calculate weights for 'lights' vector */
-	calculate_lights_used();
+	//calculate_lights_used();
 	
 	/* initialize pixel vector to set as texture */
 	vector<unsigned char> image;
