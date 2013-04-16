@@ -243,6 +243,20 @@ void build_environment_vector(char *folder) {
 	}
 }
 
+/* Shift environment map to provide dynamic lighting */
+/* num is the number of rows to shift the picture over */
+void shift_lighting(int num) {
+	int amount = env_resolution * num;
+	if (amount>0) {
+		rotate(red_env.begin(), red_env.begin() + amount, red_env.end());
+		rotate(green_env.begin(), green_env.begin() + amount, green_env.end());
+		rotate(blue_env.begin(), blue_env.begin() + amount, blue_env.end());
+	} else {
+		rotate(red_env.begin(), red_env.end() + amount, red_env.end());
+		rotate(green_env.begin(), green_env.end() + amount, green_env.end());
+		rotate(blue_env.begin(), blue_env.end() + amount, blue_env.end());
+	}
+}
 
 
 /* Mouse Functions */
@@ -300,10 +314,12 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKey(int key,int x,int y) {
 	switch(key) {
 		case 100: //left
+			shift_lighting(-2);
 			break;
 		case 101: //up
 			break;
 		case 102: //right
+			shift_lighting(2);
 			break;
 		case 103: //down
 			break;
@@ -312,17 +328,17 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	width = 680;
-	height = 880;
-	//width = 32;
-	//height = 32;
+	//width = 680;
+	//height = 880;
+	width = 64;
+	height = 64;
 	trans_y = 0;
 	pic = 0;
 	
-	env_resolution = 32;
+	env_resolution = 64;
 	
 	char* temp = "test_data";
-	build_transport_matrix(temp,2);
+	//build_transport_matrix(temp,2);
 	temp = "Grace";
 	build_environment_vector(temp);
 	
@@ -354,7 +370,7 @@ void init() {
 	glDisable(GL_ALPHA_TEST);
 }
 
-void display(){
+void display2(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	cout << trans_y << endl;
 	
@@ -387,7 +403,8 @@ void display(){
 	glutSwapBuffers();
 }
 
-void display_env(){
+/* For debugging only */
+void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	/* initialize pixel vector to set as texture */
