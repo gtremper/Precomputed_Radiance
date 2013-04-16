@@ -13,17 +13,19 @@
 ////////////////////////////////
 //////// scene /////////////////
 ////////////////////////////////
+#version 3.7;
 camera{location<0,0.75,-1.1> look_at<0,0.4,0>}
 ////////////////////////////////
+#declare xclock = mod(clock*4, 1);
+#declare yclock = floor((clock*16)/4)/4;
+#warning str(xclock, 5, 2)
+#warning str(yclock, 5, 2)
 light_source
 {
-  <5,10,-5>
+  <-1+2*xclock,2-2*yclock,-1>
   color rgb 2.0
-  spotlight
-  point_at <0,0,0.5>
-  radius 3    
-  tightness 1 
-  falloff 5 
+  area_light <1, 0, 0>, <0, 1, 0>, 2, 2
+  adaptive 1
 }
 ////////////////////////////////
 background{color rgb 0}
