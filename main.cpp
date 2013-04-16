@@ -401,13 +401,13 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	width = 512;
-	height = 512;
+	width = 256;
+	height = 256;
 	//width = 64;
 	//height = 64;
 	trans_y = 0;
 	
-	env_resolution = 4;
+	env_resolution = 16;
 	
 	char* temp = "tree_images";
 	cout << "Building trasport matrix...   ";
@@ -438,13 +438,6 @@ void init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 	glDisable(GL_ALPHA_TEST);
-	
-	
-	
-	//red_lights.push_back(make_pair(0,1));
-	//green_lights.push_back(make_pair(0,1));
-	//blue_lights.push_back(make_pair(0,1));
-	
 }
 
 /* Draws the environment map in the corner of the screen */
