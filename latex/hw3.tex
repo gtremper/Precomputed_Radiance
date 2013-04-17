@@ -17,6 +17,17 @@ For the basic relighting viewer, we start by computing the light transport matri
 \section{Environment Maps}
 Once we light transport matrix is computing, adding an environment map is straightforward. We used environments from ``Paul Debevec's'' website, including Grace Cathedral, a eucalyptus grove, and a beach scene. Rendering the scene simply involves weighting each column of the transport matrix by the intensity of the corresponding pixel on the cubemap. Without compression, real-time frame rate become intractable with large environment maps and output image resolutions.
 
+\begin{table}
+    \centering
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace0}
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace1}
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace2}
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace3}
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace4}
+    \includegraphics[width=.1\linewidth]{figs/grace/Grace5}
+    \caption{Grace Cathedral environment map projected onto 6 sides of a bounding cube}
+\end{table}
+
 \section{Wavelet Transform}
 In order to allow for larger scenes with higher resolution environment maps, we used a Haar wavelet transform along each row of the light transport matrix. Since each of these rows is essentially an environment map, we did a 2d Haar transform for each face of the ``cube''. When rendering a frame, we haar transform the current orientation of environment and then perform a sparse matrix multiplication, using only the most significant terms. Ng et al. 03 suggested three methods of selecting subset of wavelet basis lights. These are a nieve ``unweighted selection'' which only looks at the wavelet coefficients, a``transport-weighted selection'' which wights each wavelet coefficient by the energy in the $i^{th}$ column of the transport matrix, and an ``area-weighted selection'' which scales the priority by the area of the wavelet light. The results for these approaches can be seen in the figures below.
 
