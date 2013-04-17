@@ -405,6 +405,7 @@ void keyboard(unsigned char key, int x, int y) {
 	char *filename;
 	switch(key){
 		case 'w':
+            sort_mode = sort_mode == NAIVE ? WEIGHTED : NAIVE;
 			break;
 		case 'a':
 			filename = "Grace";
