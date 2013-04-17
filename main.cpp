@@ -185,6 +185,9 @@ void build_transport_matrix(char *folder, const int num_files) {
 	vector<float> red_row;
 	vector<float> green_row;
 	vector<float> blue_row;
+	cout << width << endl;
+	cout << height <<endl;
+	cout << width*height << endl;
 	for (unsigned int pixel=0; pixel<width*height; pixel++) {
 		clog << "Haar transforming row " << pixel << " of " <<width*height<<"\r";
 		for (int i=0; i<num_files; i++) {
@@ -514,7 +517,8 @@ void init() {
 
     num_wavelets = min(num_wavelets, (int)numSceneFiles);
 	
-    env_resolution = sqrt(numSceneFiles / 6.0);
+    //env_resolution = sqrt(numSceneFiles / 6.0);
+	env_resolution = 4;
 	
 	build_transport_matrix(scenefolder, numSceneFiles);
 	char* temp = "Grace";
