@@ -36,6 +36,7 @@ int lastx, lasty; // For mouse motion
 float trans_x;
 float trans_y;
 float max_light;
+char* scenefolder;
 
 
 /* Shaders */
@@ -540,6 +541,11 @@ void display(){
 	draw_env_map();
 	
 	glutSwapBuffers();
+}
+
+void
+parse_command_line(int argc, char* argv[]) {
+    scenefolder = argv[1];
 }
 
 
