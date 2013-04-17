@@ -1,11 +1,11 @@
 /* This is the main file for the Precomputed Radiance viewer */
+/*       Written by Graham Tremper and Gabe Fierro           */
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <glob.h>
 #include "omp.h"
-#include <sstream>
 #include <time.h>
 #include <GLUT/glut.h>
 
@@ -16,10 +16,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/epsilon.hpp>
-
-#define BPP 24
-#define EPSILON 0.00000001
-#define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
 #define USEHAAR
@@ -32,9 +28,6 @@ using namespace std;
 unsigned int height;
 unsigned int width;
 unsigned int env_resolution;
-int lastx, lasty; // For mouse motion
-float trans_x;
-float trans_y;
 float max_light;
 char* scenefolder = "povray/tree_16x16/sharp_tree_images";
 int env_move_rate;
@@ -79,29 +72,8 @@ vector< pair<int,float> > red_lights;
 vector< pair<int,float> > green_lights;
 vector< pair<int,float> > blue_lights;
 
-/*
-1d haar transform. Vec must be a power of 2 length
-*/
-void haar1d(vector<float>::iterator vec, int w, bool is_col){
-	float *tmp = new float[w];
-	memset(tmp, 0, sizeof(float)*w);
-	
-	int offset = is_col ? w : 1;
-	
-	while (w>1) {
-		w /= 2;
-		for (int i=0; i<w; i++) {
-			tmp[i] = (vec[2*i*offset] + vec[(2*i+1)*offset]) / sqrt(2.0);
-			tmp[i+w] = (vec[2*i*offset] - vec[(2*i+1)*offset]) / sqrt(2.0);
-		}
-		for (int i=0; i<2*w; i++) {
-			vec[i*offset] = tmp[i];
-		}
-	}
-	delete [] tmp;
-}
 
-/* Modified verstion of haar1d for 2d haar transform */
+/* One iteration of 1d haar transform for use in haar2d */
 void haar(vector<float>::iterator vec, int w, int res, bool is_col){
 	float *tmp = new float[w];
 	memset(tmp, 0, sizeof(float)*w);
@@ -185,9 +157,6 @@ void build_transport_matrix(char *folder, const int num_files) {
 	vector<float> red_row;
 	vector<float> green_row;
 	vector<float> blue_row;
-	cout << width << endl;
-	cout << height <<endl;
-	cout << width*height << endl;
 	for (unsigned int pixel=0; pixel<width*height; pixel++) {
 		clog << "Haar transforming row " << pixel << " of " <<width*height<<"\r";
 		for (int i=0; i<num_files; i++) {
@@ -379,33 +348,9 @@ void shift_env_map(int num) {
 }
 
 
-/* Mouse Functions */
-void mouseClick(int button, int state, int x, int y) {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-		lastx = x;
-		lasty = y;
-	}
-}
-
-void mouse(int x, int y) {
-	//int diffx=x-lastx; 
-    int diffy=y-lasty; 
-    lastx=x; //set lastx to the current x position
-    lasty=y; //set lasty to the current y position
-
-	trans_y -= diffy*0.005f;
-	trans_y = min(1.0f,trans_y);
-	trans_y = max(0.0f,trans_y);
-	
-	glutPostRedisplay();
-}
-
-
 /* Everything below here is openGL boilerplate */
 
 void reshape(int w, int h){
-	//width = w;
-	//height = h;
 	glViewport(0, 0, w, h);
 	glutPostRedisplay();
 }
@@ -517,8 +462,7 @@ void init() {
 
     num_wavelets = min(num_wavelets, (int)numSceneFiles);
 	
-    //env_resolution = sqrt(numSceneFiles / 6.0);
-	env_resolution = 4;
+    env_resolution = sqrt(numSceneFiles / 6.0);
 	
 	build_transport_matrix(scenefolder, numSceneFiles);
 	char* temp = "Grace";
@@ -651,7 +595,7 @@ void display(){
 	
     float light_normal;
     if(max_light < 1.0f)
-        light_normal = max_light * 255.0f;
+        light_normal = 255.0f;
     else
 	    light_normal = (1.0f/max_light) * 255.0f;
 	
@@ -711,8 +655,6 @@ int main(int argc, char* argv[]){
 	glutSpecialFunc(specialKey);
 	glutReshapeFunc(reshape);
 	glutReshapeWindow(width,height);
-	glutMotionFunc(mouse);
-	glutMouseFunc(mouseClick);
 	glutMainLoop();
 	return 0;
 }
