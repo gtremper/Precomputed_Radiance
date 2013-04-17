@@ -548,12 +548,16 @@ void display(){
 	vector<unsigned char> image;
 	
 	cout << "MAXLIGHT: " << max_light << endl;
-	float light_normal = (1.0f/max_light) * 255.0f;
+    float light_normal;
+    if(max_light < 1.0f)
+        light_normal = max_light * 255.0f;
+    else
+	    light_normal = (1.0f/max_light) * 255.0f;
 	
 	for (unsigned int i=0; i<width*height; i++) {
-		image.push_back( pre_image[3*i] * light_normal);
-		image.push_back( pre_image[3*i+1] * light_normal);
-		image.push_back( pre_image[3*i+2] * light_normal);
+		image.push_back( max(0.0f, pre_image[3*i] * light_normal));
+		image.push_back( max(0.0f, pre_image[3*i+1] * light_normal));
+		image.push_back( max(0.0f, pre_image[3*i+2] * light_normal));
 	}
 	
 	/* Draw to screen */
