@@ -371,6 +371,10 @@ void keyboard(unsigned char key, int x, int y) {
 			filename = "Beach";
 			build_environment_vector(filename);
 			break;
+        case 'f':
+            filename = "AreaLight";
+			build_environment_vector(filename);
+			break;
 		case 27:  // Escape to quit
 			delete [] red_matrix;
 			delete [] green_matrix;
