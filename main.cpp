@@ -396,10 +396,10 @@ void init() {
         numSceneFiles = gl.gl_pathc;
     globfree(&gl);
 	
-	env_resolution = 16;
+    env_resolution = sqrt(numSceneFiles / 6.0);
 	
 	cout << "Building trasport matrix...   ";
-	build_transport_matrix(scenefolder,env_resolution*env_resolution*6);
+	build_transport_matrix(scenefolder, numSceneFiles);
 	cout << "done" << endl;
 	char* temp = "Grace";
 	build_environment_vector(temp);
