@@ -38,6 +38,7 @@ float trans_x;
 float trans_y;
 float max_light;
 char* scenefolder = "povray/tree_16x16/sharp_tree_images";
+int env_map_move_rate;
 
 /* used for counting files in directory */
 glob_t gl;
@@ -436,14 +437,18 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKey(int key,int x,int y) {
 	switch(key) {
 		case 100: //left
-			shift_env_map(-2);
+			shift_env_map(-env_map_move_rate);
 			break;
 		case 101: //up
+			env_map_move_rate = min(env_map_move_rate+1,(int)env_resolution);
+			cout << "Environment shift rate is " << env_map_move_rate << endl;
 			break;
 		case 102: //right
-			shift_env_map(2);
+			shift_env_map(env_map_move_rate);
 			break;
 		case 103: //down
+			env_map_move_rate = max(env_map_move_rate-1, 1);
+			cout << "Environment shift rate is " << env_map_move_rate << endl;
 			break;
 	}
 	glutPostRedisplay();
@@ -454,6 +459,7 @@ void init() {
 	height = 256;
 	trans_y = 0;
 	max_light = 0;
+	env_map_move_rate = 1;
 
     /** calculate env_resolution based on number of files in scenefolder */
     string pngs = string(scenefolder) + "/*.png";
@@ -571,7 +577,7 @@ void display(){
 	
 	/* Loop through the chosen lights and combine them with their weight */
 	
-	for (unsigned int j=0; j<50; j++) {
+	for (unsigned int j=0; j<150; j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
 		int b_ind = blue_lights[j].first;
@@ -579,9 +585,6 @@ void display(){
 		float r_weight = red_lights[j].second;
 		float g_weight = green_lights[j].second;
 		float b_weight = blue_lights[j].second;
-		if (b_weight >= 16*16*6){
-			cout << "TOO BIG" << b_weight<<endl;
-		}
 		
 		for (unsigned int i=0; i<width*height; i++) {
 			pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
@@ -595,7 +598,6 @@ void display(){
 	
 	vector<unsigned char> image;
 	
-	cout << "MAXLIGHT: " << max_light << endl;
     float light_normal;
     if(max_light < 1.0f)
         light_normal = max_light * 255.0f;
