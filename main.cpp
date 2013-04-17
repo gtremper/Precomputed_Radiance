@@ -148,7 +148,9 @@ void build_transport_matrix(char *folder, const int num_files) {
 	/* Load files into matrix */
 	for (int i=0; i<num_files; i++) {
 		char filename[50];
-        if(num_files > 1000)
+        if(num_files > 10000)
+          sprintf(filename, "%s/%05d.png", folder, i);
+        else if(num_files > 1000)
           sprintf(filename, "%s/%04d.png", folder, i);
         else
           sprintf(filename, "%s/%03d.png", folder, i);
