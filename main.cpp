@@ -76,9 +76,9 @@ vector< pair<int,float> > blue_lights;
 void haar1d(vector<float>::iterator vec, int w, bool is_col){
     float *tmp = new float[w];
     memset(tmp, 0, sizeof(float)*w);
-    
+
     int offset = is_col ? w : 1;
-    
+
     while (w>1) {
         w /= 2;
         for (int i=0; i<w; i++) {
@@ -96,9 +96,9 @@ void haar1d(vector<float>::iterator vec, int w, bool is_col){
 void haar(vector<float>::iterator vec, int w, int res, bool is_col){
     float *tmp = new float[w];
     memset(tmp, 0, sizeof(float)*w);
-    
+
     int offset = is_col ? res : 1;
-    
+
     w /= 2;
     for (int i=0; i<w; i++) {
         tmp[i] = (vec[2*i*offset] + vec[(2*i+1)*offset]) / sqrt(2.0);
@@ -114,11 +114,11 @@ void haar(vector<float>::iterator vec, int w, int res, bool is_col){
 2d haar transform on each face of a cubemap
 */
 void haar2d(vector<float>& vec){
-    
+
     int resolution = sqrt(vec.size());
-    
+
     int w = resolution;
-    
+
     while (w>1) {
         vector<float>::iterator row_iter = vec.begin();
         for (int i=0; i<resolution; i++){
@@ -136,13 +136,13 @@ void haar2d(vector<float>& vec){
 
 /* Creates the light transport matrix from images in 'folder' */
 void build_transport_matrix(char *folder, const int num_files) {
-    
+
     red_matrix = new vector<float>[num_files];
     green_matrix = new vector<float>[num_files];
     blue_matrix = new vector<float>[num_files];
-    
+
     vector<unsigned char> image; //the raw pixels
-    
+
     /* Load files into matrix */
     for (int i=0; i<num_files; i++) {
         char filename[50];
@@ -151,9 +151,9 @@ void build_transport_matrix(char *folder, const int num_files) {
         else
           sprintf(filename, "%s/%03d.png", folder, i);
         cout << filename << endl;
-        
+
         unsigned error = lodepng::decode(image, width, height, filename);
-        
+
         if(error) {
             cout << "decoder error " << error
             << ": " << lodepng_error_text(error) << endl;
@@ -167,7 +167,7 @@ void build_transport_matrix(char *folder, const int num_files) {
         }
         image.clear();
     }
-    
+
     /* Haar transform rows of matrix */
     vector<float> red_row;
     vector<float> green_row;
@@ -178,13 +178,13 @@ void build_transport_matrix(char *folder, const int num_files) {
             green_row.push_back(green_matrix[i][pixel]);
             blue_row.push_back(blue_matrix[i][pixel]);
         }
-        
+
         #ifdef USEHAAR
         haar2d(red_row);
         haar2d(green_row);
         haar2d(blue_row);
         #endif
-        
+
         for (int i=0; i<num_files; i++) {
             red_matrix[i][pixel] = red_row[i];
             green_matrix[i][pixel] = green_row[i];
@@ -201,20 +201,20 @@ void build_environment_vector(char *folder) {
     green_env.clear();
     blue_env.clear();
     max_light = 0;
-    
+
     unsigned int NUM_FACES = 6;
     unsigned int resolution = 256;
-    
+
     vector<unsigned char> image; //the raw pixels
-    
+
     vector<float> red_env_face;
     vector<float> green_env_face;
     vector<float> blue_env_face;
-    
+
     for (unsigned int i=0; i<NUM_FACES; i++) {
         char filename[50];
         sprintf(filename, "environment_maps/%s/%s%d.png", folder, folder, i);
-        
+
         lodepng::decode(image, resolution, resolution, filename);
 
         for(unsigned int j=0; j<image.size(); j+=4) {
@@ -223,7 +223,7 @@ void build_environment_vector(char *folder) {
             blue_env_face.push_back(image[j+2]/255.0f);
         }
         image.clear();
-        
+
         /* Downsample to desired resolution */
         vector<float> new_red;
         vector<float> new_green;
@@ -254,9 +254,9 @@ void build_environment_vector(char *folder) {
             blue_env_face = new_blue;
             new_red.clear();
             new_green.clear();
-            new_blue.clear();   
+            new_blue.clear();
         }
-        
+
         /*Insert this side of cubemap into envirornmap vector */
         red_env.insert(red_env.end(),red_env_face.begin(),red_env_face.end());
         green_env.insert(green_env.end(),green_env_face.begin(),green_env_face.end());
@@ -273,25 +273,25 @@ void calculate_lights_used(){
     red_lights.clear();
     green_lights.clear();
     blue_lights.clear();
-    
+
     /* make copy to use with haar */
     vector<float> red_haar(red_env);
     vector<float> green_haar(green_env);
     vector<float> blue_haar(blue_env);
-    
+
     #ifdef USEHAAR
     haar2d(red_haar);
     haar2d(green_haar);
     haar2d(blue_haar);
     #endif
-    
+
     /* Create new lights vectors. This just uses all of them right now */
     for (unsigned int i=0; i<red_env.size(); i++) {
         red_lights.push_back( make_pair(i, red_haar[i]) );
         green_lights.push_back( make_pair(i, green_haar[i]) );
         blue_lights.push_back( make_pair(i, blue_haar[i]) );
     }
-    
+
 }
 
 /* Shift environment map to provide dynamic lighting */
@@ -319,15 +319,15 @@ void mouseClick(int button, int state, int x, int y) {
 }
 
 void mouse(int x, int y) {
-    //int diffx=x-lastx; 
-    int diffy=y-lasty; 
+    //int diffx=x-lastx;
+    int diffy=y-lasty;
     lastx=x; //set lastx to the current x position
     lasty=y; //set lasty to the current y position
 
     trans_y -= diffy*0.005f;
     trans_y = min(1.0f,trans_y);
     trans_y = max(0.0f,trans_y);
-    
+
     glutPostRedisplay();
 }
 
@@ -395,9 +395,9 @@ void init() {
     if(glob(pngs.c_str(), GLOB_NOSORT, NULL, &gl) == 0)
         numSceneFiles = gl.gl_pathc;
     globfree(&gl);
-    
+
     env_resolution = sqrt(numSceneFiles / 6.0);
-    
+
     cout << "Building trasport matrix...   ";
     build_transport_matrix(scenefolder, numSceneFiles);
     cout << "done" << endl;
@@ -407,20 +407,20 @@ void init() {
     vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
     fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
     shaderprogram = initprogram(vertexshader, fragmentshader);
-    
+
     glGenTextures(1, &texture);
     glEnable(GL_TEXTURE_2D) ;
     glActiveTexture(GL_TEXTURE0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-1,1,-1,1,-1,1);
     glMatrixMode(GL_MODELVIEW);
     glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
     glLoadMatrixf(&mv[0][0]);
-    
+
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -436,9 +436,9 @@ void draw_env_map() {
         envmap.push_back( green_env[i]* 255.0f);
         envmap.push_back( blue_env[i]* 255.0f);
     }
-    
+
     int offset = env_resolution*env_resolution*3;
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[0]);
     glBegin(GL_QUADS);
@@ -447,7 +447,7 @@ void draw_env_map() {
     glTexCoord2d(1, 0); glVertex3d(.75, 0, .1);
     glTexCoord2d(1, 1); glVertex3d(.75, -.25, .1);
     glEnd();
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset]);
     glBegin(GL_QUADS);
@@ -456,7 +456,7 @@ void draw_env_map() {
     glTexCoord2d(1, 0); glVertex3d(.5, -.25, .1);
     glTexCoord2d(1, 1); glVertex3d(.5, -.5, .1);
     glEnd();
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*2]);
     glBegin(GL_QUADS);
@@ -465,7 +465,7 @@ void draw_env_map() {
     glTexCoord2d(1, 0); glVertex3d(.75, -.25, .1);
     glTexCoord2d(1, 1); glVertex3d(.75, -.5, .1);
     glEnd();
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*3]);
     glBegin(GL_QUADS);
@@ -474,7 +474,7 @@ void draw_env_map() {
     glTexCoord2d(1, 0); glVertex3d(1, -.25, .1);
     glTexCoord2d(1, 1); glVertex3d(1, -.5, .1);
     glEnd();
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*4]);
     glBegin(GL_QUADS);
@@ -483,7 +483,7 @@ void draw_env_map() {
     glTexCoord2d(1, 0); glVertex3d(.75, -.5, .1);
     glTexCoord2d(1, 1); glVertex3d(.75, -.75, .1);
     glEnd();
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, env_resolution,env_resolution,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &envmap[offset*5]);
     glBegin(GL_QUADS);
@@ -496,28 +496,28 @@ void draw_env_map() {
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
-    
+
     /* Calculate weights for 'lights' vector */
     calculate_lights_used();
-    
+
     /* initialize pixel vector to set as texture */
     vector<float> pre_image;
     pre_image.resize(3*width*height, 0);
-    
+
     /* Loop through the chosen lights and combine them with their weight */
-    
+
     for (unsigned int j=0; j<red_lights.size(); j++) {
         int r_ind = red_lights[j].first;
         int g_ind = green_lights[j].first;
         int b_ind = blue_lights[j].first;
-        
+
         float r_weight = red_lights[j].second;
         float g_weight = green_lights[j].second;
         float b_weight = blue_lights[j].second;
         if (b_weight >= 16*16*6){
             cout << "TOO BIG" << b_weight<<endl;
         }
-        
+
         for (unsigned int i=0; i<width*height; i++) {
             pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
             pre_image[3*i+1] += green_matrix[g_ind][i]*g_weight;
@@ -527,18 +527,18 @@ void display(){
             max_light = max(pre_image[3*i+2],max_light);
         }
     }
-    
+
     vector<unsigned char> image;
-    
+
     cout << "MAXLIGHT: " << max_light << endl;
     float light_normal = (1.0f/max_light) * 255.0f;
-    
+
     for (unsigned int i=0; i<width*height; i++) {
         image.push_back( pre_image[3*i] * light_normal);
         image.push_back( pre_image[3*i+1] * light_normal);
         image.push_back( pre_image[3*i+2] * light_normal);
     }
-    
+
     /* Draw to screen */
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,
         0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) &image[0]);
@@ -548,10 +548,10 @@ void display(){
     glTexCoord2d(1, 0); glVertex3d(1, 1, 0);
     glTexCoord2d(1, 1); glVertex3d(1, -1, 0);
     glEnd();
-    
+
     /* Draw environment map */
     draw_env_map();
-    
+
     glutSwapBuffers();
 }
 
