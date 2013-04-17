@@ -21,7 +21,7 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
-//#define USEHAAR
+#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -139,7 +139,8 @@ void build_transport_matrix(char *folder, const int num_files) {
 	/* Load files into matrix */
 	for (int i=0; i<num_files; i++) {
 		char filename[50];
-		sprintf(filename, "%s/%04d.png", folder, i);
+		sprintf(filename, "%s/%03d.png", folder, i);
+		cout << filename << endl;
 		
 		unsigned error = lodepng::decode(image, width, height, filename);
 		
@@ -270,15 +271,15 @@ void calculate_lights_used(){
 	int count = 0;
 	for (unsigned int i=0; i<red_env.size(); i++) {
 		if (red_haar[i]>EPSILON) {
-			red_lights.push_back( make_pair(i, 0.03*red_haar[i]) );
+			red_lights.push_back( make_pair(i, red_haar[i]) );
 			count++;
 		}
 		if (green_haar[i]>EPSILON) {
-			green_lights.push_back( make_pair(i, 0.03*green_haar[i]) );
+			green_lights.push_back( make_pair(i, green_haar[i]) );
 			count++;
 		}
 		if (blue_haar[i]>EPSILON) {
-			blue_lights.push_back( make_pair(i, 0.03*blue_haar[i]) );
+			blue_lights.push_back( make_pair(i, blue_haar[i]) );
 			count++;
 		}
 	}
@@ -403,17 +404,15 @@ void specialKey(int key,int x,int y) {
 void init() {
 	width = 256;
 	height = 256;
-	//width = 64;
-	//height = 64;
 	trans_y = 0;
 	
 	env_resolution = 16;
 	
 	char* temp = "tree_images";
 	cout << "Building trasport matrix...   ";
-	build_transport_matrix(temp,96);
+	build_transport_matrix(temp,env_resolution*env_resolution*6);
 	cout << "done" << endl;
-	temp = "Grace";
+	temp = "Grove";
 	build_environment_vector(temp);
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
@@ -520,6 +519,7 @@ void display(){
 	
 	
 	/* Loop through the chosen lights and combine them with their weight */
+	float max_light = 0;
 	for (unsigned int j=0; j<red_lights.size(); j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
@@ -533,16 +533,22 @@ void display(){
 			pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
 			pre_image[3*i+1] += green_matrix[g_ind][i]*g_weight;
 			pre_image[3*i+2] += blue_matrix[b_ind][i]*b_weight;
+			max_light = max(pre_image[3*i],max_light);
+			max_light = max(pre_image[3*i+1],max_light);
+			max_light = max(pre_image[3*i+2],max_light);
 		}
 	}
 	
 	vector<unsigned char> image;
 	image.reserve(3*width*height);
 	
+	cout << "MAXLIGHT: " << max_light << endl;
+	float light_normal = (1.0f/max_light) * 255.0f;
+	
 	for (unsigned int i=0; i<width*height; i++) {
-		image.push_back( min(pre_image[3*i], 1.0f) * 255.0f);
-		image.push_back( min(pre_image[3*i+1], 1.0f) * 255.0f);
-		image.push_back( min(pre_image[3*i+2], 1.0f) * 255.0f);
+		image.push_back( pre_image[3*i] * light_normal);
+		image.push_back( pre_image[3*i+1] * light_normal);
+		image.push_back( pre_image[3*i+2] * light_normal);
 	}
 	
 	/* Draw to screen */
