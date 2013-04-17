@@ -22,6 +22,35 @@ combining the rows of the transport matrix with the weight of the light at the
 corresponding cubemap pixel. We can do this in real-time without compression if
 a limited number of cubemap lights are used.
 
+\subsection{Using POVray}
+
+While POVray (http://povray.org/) is a fully-featured raytracer, it has several
+limitations that made it difficult to efficiently and easily generate the large
+number of images needed to compute the light transport matrix. Firstly, POVray
+is single threaded, so generating all 6144 images for $32\times 32$ pixel
+environment map (for all 6 sides of the cube), rendering the scene at
+$512\times 512$ pixels at 3 seconds per render, takes over 5 hours, generating
+over 1.3 GB of data.
+
+\begin{center}
+\begin{tabular}{|l|c|}
+ \hline
+ E.V. Dimension & Total Images\\
+ \hline
+ $4\times 4$ & 96 \\
+ $16\times 16$ & 1536 \\
+ $32\times 32$ & 6144 \\
+ \hline
+\end{tabular}
+\end{center}
+
+Secondly, POVray's default settings for rendering scenes make it difficult to
+automate generating the images with the necessary contrast from each side of
+the bounding cube. While POVray does contain a Turing-complete scripting
+language, it only provides a single counter variable for generating successive
+scenes, complicating the 2-dimensional parameterization of each face of the
+cube.
+
 \section{Environment Maps}
 
 Once we light transport matrix is computing, adding an environment map is
