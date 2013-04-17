@@ -267,6 +267,11 @@ void build_environment_vector(char *folder) {
 	}
 }
 
+bool sort_func(pair<int,float> i, pair<int,float> j){
+	return (i.second>j.second);
+}
+
+
 /* Calculate values for light vector */
 void calculate_lights_used(){
 	/* Remove old values */
@@ -291,6 +296,10 @@ void calculate_lights_used(){
 		green_lights.push_back( make_pair(i, green_haar[i]) );
 		blue_lights.push_back( make_pair(i, blue_haar[i]) );
 	}
+	
+	sort(red_lights.begin(),red_lights.end(),sort_func);
+	sort(green_lights.begin(),green_lights.end(),sort_func);
+	sort(blue_lights.begin(),blue_lights.end(),sort_func);
 	
 }
 
@@ -506,7 +515,7 @@ void display(){
 	
 	/* Loop through the chosen lights and combine them with their weight */
 	
-	for (unsigned int j=0; j<red_lights.size(); j++) {
+	for (unsigned int j=0; j<50; j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
 		int b_ind = blue_lights[j].first;
