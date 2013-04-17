@@ -102,11 +102,9 @@ transform for each face of the ``cube''. When rendering a frame, we haar
 transform the current orientation of environment and then perform a sparse
 matrix multiplication, using only the most significant terms. Ng et al. 03
 suggested three methods of selecting subset of wavelet basis lights. These are
-a nieve ``unweighted selection'' which only looks at the wavelet coefficients,
+a nieve ``unweighted selection'' which only looks at the wavelet coefficients and
 a``transport-weighted selection'' which wights each wavelet coefficient by the
-energy in the $i^{th}$ column of the transport matrix, and an ``area-weighted
-selection'' which scales the priority by the area of the wavelet light. The
-results for these approaches can be seen in the figures below.
+energy in the $i^{th}$ column of the transport matrix.
 
 
 
