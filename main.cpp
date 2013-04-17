@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <glob.h>
 #include "omp.h"
 #include <sstream>
 #include <time.h>
@@ -38,6 +39,9 @@ float trans_y;
 float max_light;
 char* scenefolder = "povray/tree_16x16/sharp_tree_images";
 
+/* used for counting files in directory */
+glob_t gl;
+size_t numSceneFiles = 0;
 
 /* Shaders */
 GLuint vertexshader;
@@ -382,6 +386,12 @@ void init() {
 	height = 256;
 	trans_y = 0;
 	max_light = 0;
+
+    /** calculate env_resolution based on number of files in scenefolder */
+    string pngs = string(scenefolder) + "/*.png";
+    if(glob(pngs.c_str(), GLOB_NOSORT, NULL, &gl) == 0)
+        numSceneFiles = gl.gl_pathc;
+    globfree(&gl);
 	
 	env_resolution = 16;
 	
