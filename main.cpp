@@ -511,6 +511,8 @@ void init() {
     if(glob(pngs.c_str(), GLOB_NOSORT, NULL, &gl) == 0)
         numSceneFiles = gl.gl_pathc;
     globfree(&gl);
+
+    num_wavelets = min(num_wavelets, (int)numSceneFiles);
 	
     env_resolution = sqrt(numSceneFiles / 6.0);
 	
