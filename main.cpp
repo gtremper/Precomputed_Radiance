@@ -6,7 +6,6 @@
 #include <vector>
 #include <glob.h>
 #include "omp.h"
-#include <time.h>
 #include <GLUT/glut.h>
 
 #include "shaders.h"
@@ -450,7 +449,6 @@ void specialKey(int key,int x,int y) {
 void init() {
 	width = scene_resolution;
 	height = scene_resolution;
-	trans_y = 0;
 	max_light = 0;
 	env_move_rate = 1;
 
@@ -643,7 +641,6 @@ parse_command_line(int argc, char* argv[]) {
 
 
 int main(int argc, char* argv[]){
-	srand(time(0));
     parse_command_line(argc, argv);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
