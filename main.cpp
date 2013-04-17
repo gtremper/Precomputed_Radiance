@@ -402,6 +402,24 @@ void reshape(int w, int h){
 	glutPostRedisplay();
 }
 
+void print_help() {
+	cout << "\n*******************************************************************\n";
+	cout << "Welcome to Graham and Gabe's Precomputed Relighter!\n";
+	cout << "Press the left and right arrow to move the environment map\n";
+	cout << "Press the up and down arrow to change the environment map move rate\n";
+	cout << "Press 'a' for the Grace Cathedral environment map\n";
+	cout << "Press 's' for the Eucalyptus Grove environment map\n";
+	cout << "Press 'd' for the Beach environment map\n";
+	cout << "Press 'f' for the area light environment map\n";
+	cout << "Press 'w' to change the sorting function for important wavelets\n";
+	cout << "Press 'o' to use less wavelets per frame\n";
+	cout << "Press 'p' to use more wavelets per frame\n";
+	cout << "Press 'esc' to exit the program\n";
+	cout << "Press 'h' to see this help again!\n";
+	cout << "*******************************************************************\n";
+	cout << endl;
+}
+
 void keyboard(unsigned char key, int x, int y) {
 	char *filename;
 	switch(key){
@@ -443,6 +461,8 @@ void keyboard(unsigned char key, int x, int y) {
 			num_wavelets = min(num_wavelets, (int)red_means.size());
 			cout << "Now using " << num_wavelets << " wavelets per frame" << endl;
 			break;
+		case 'h':
+			print_help();
 		case 27:  // Escape to quit
 			delete [] red_matrix;
 			delete [] green_matrix;
@@ -488,9 +508,9 @@ void init() {
 	
     env_resolution = sqrt(numSceneFiles / 6.0);
 	
-	cout << "Building trasport matrix...   ";
+	clog << "Building trasport matrix...   ";
 	build_transport_matrix(scenefolder, numSceneFiles);
-	cout << "done" << endl;
+	clog << "done" << endl;
 	char* temp = "Grace";
 	build_environment_vector(temp);
 
@@ -516,6 +536,8 @@ void init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 	glDisable(GL_ALPHA_TEST);
+	
+	print_help();
 }
 
 /* Draws the environment map in the corner of the screen */
