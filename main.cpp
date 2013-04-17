@@ -447,7 +447,7 @@ void keyboard(unsigned char key, int x, int y) {
 			break;
 		case 'd':
 			filename = "Beach";
-			cout << "Environment Map: Grace Cathedral" << endl;
+			cout << "Environment Map: Beach" << endl;
 			build_environment_vector(filename);
 			break;
         case 'f':
