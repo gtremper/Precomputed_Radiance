@@ -36,7 +36,7 @@ int lastx, lasty; // For mouse motion
 float trans_x;
 float trans_y;
 float max_light;
-char* scenefolder;
+char* scenefolder = "povray/tree_16x16/sharp_tree_images";
 
 
 /* Shaders */
@@ -545,6 +545,10 @@ void display(){
 
 void
 parse_command_line(int argc, char* argv[]) {
+    if(argc != 2)
+    {
+      return;
+    }
     scenefolder = argv[1];
 }
 
