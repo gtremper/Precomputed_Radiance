@@ -24,8 +24,6 @@
 /* Define this if you want to use haar transform */
 #define USEHAAR
 
-enum {NAIVE, WEIGHTED};
-
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
 
@@ -59,6 +57,13 @@ The array indexes the columns
 vector<float>* red_matrix;
 vector<float>* green_matrix;
 vector<float>* blue_matrix;
+
+/* Average Intensity of each picture (after haar) */
+vector<float> red_means;
+vector<float> green_means;
+vector<float> blue_means;
+enum {NAIVE, WEIGHTED};
+int sort_mode = NAIVE;
 
 /*
 Environment map for lighting
@@ -198,6 +203,25 @@ void build_transport_matrix(char *folder, const int num_files) {
 		green_row.clear();
 		blue_row.clear();
 	}
+	
+	/* Fine average intensities for weighting*/
+	for (unsigned int i=0; i<num_files; i++) {
+		float red_total = 0.0f;
+		float green_total = 0.0f;
+		float blue_total = 0.0f;
+		for(unsigned int pixel=0; pixel<width*height; pixel++) {
+			red_total += red_matrix[i][pixel];
+			green_total += green_matrix[i][pixel];
+			blue_total += blue_matrix[i][pixel];
+		}
+		red_total /= float(width*height);
+		green_total /= float(width*height);
+		blue_total /= float(width*height);
+		
+		red_means.push_back(red_total);
+		green_means.push_back(green_total);
+		blue_means.push_back(blue_total);
+	}
 }
 
 void build_environment_vector(char *folder) {
@@ -271,8 +295,25 @@ void build_environment_vector(char *folder) {
 	}
 }
 
-bool sort_func(pair<int,float> i, pair<int,float> j){
+bool naive_sort(pair<int,float> i, pair<int,float> j){
 	return (i.second>j.second);
+}
+
+/* One sort function for each color channel */
+bool red_weighted_sort(pair<int,float> i, pair<int,float> j){
+	float comp1 = i.second * red_means[i.first];
+	float comp2 = j.second * red_means[j.first];
+	return comp1>comp2;
+}
+bool green_weighted_sort(pair<int,float> i, pair<int,float> j){
+	float comp1 = i.second * green_means[i.first];
+	float comp2 = j.second * green_means[j.first];
+	return comp1>comp2;
+}
+bool blue_weighted_sort(pair<int,float> i, pair<int,float> j){
+	float comp1 = i.second * blue_means[i.first];
+	float comp2 = j.second * blue_means[j.first];
+	return comp1>comp2;
 }
 
 
@@ -301,9 +342,15 @@ void calculate_lights_used(){
 		blue_lights.push_back( make_pair(i, blue_haar[i]) );
 	}
 	
-	sort(red_lights.begin(),red_lights.end(),sort_func);
-	sort(green_lights.begin(),green_lights.end(),sort_func);
-	sort(blue_lights.begin(),blue_lights.end(),sort_func);
+	if (sort_mode == NAIVE) {
+		sort(red_lights.begin(),red_lights.end(), naive_sort);
+		sort(green_lights.begin(),green_lights.end(), naive_sort);
+		sort(blue_lights.begin(),blue_lights.end(), naive_sort);
+	} else {
+		sort(red_lights.begin(),red_lights.end(), red_weighted_sort);
+		sort(green_lights.begin(),green_lights.end(), green_weighted_sort);
+		sort(blue_lights.begin(),blue_lights.end(), blue_weighted_sort);
+	}
 	
 }
 
