@@ -16,16 +16,17 @@
 #version 3.7;
 camera{location<0,1.5,-1> look_at<0,0.4,0>}
 ////////////////////////////////
-#declare xclock = mod((clock*4) / Resolution, 1);
-#declare yclock = floor((clock*4) / Resolution) / 4;
+#declare side = sqrt(Resolution);
+#declare xclock = mod((clock*side) / Resolution, 1);
+#declare yclock = floor((clock*side) / Resolution) / side;
 #warning str(xclock, 5, 2)
 #warning str(yclock, 5, 2)
 #warning str(-2+4*xclock, 5, 2)
 #warning str(2-4*yclock, 5, 2)
 light_source
 {
-  <2,.1+4*yclock,-2+4*xclock>
-  color rgb 1.0
+  <4,.1+8*yclock,-4+8*xclock>
+  color rgb 1.0 / side
 }
 ////////////////////////////////
 background {color rgb 0}
@@ -163,4 +164,4 @@ union
 ////////////////////////////////
 ////////////////////////////////
 
-object{tree finish{ ambient 0} }
+object{tree finish{ ambient 0 diffuse 0} }
