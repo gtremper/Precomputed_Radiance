@@ -35,6 +35,8 @@ unsigned int env_resolution;
 int lastx, lasty; // For mouse motion
 float trans_x;
 float trans_y;
+float max_light;
+
 
 /* Shaders */
 GLuint vertexshader;
@@ -144,8 +146,11 @@ void build_transport_matrix(char *folder, const int num_files) {
 		
 		unsigned error = lodepng::decode(image, width, height, filename);
 		
-		if(error) std::cout << "decoder error " << error
-		 	<< ": " << lodepng_error_text(error) << std::endl;
+		if(error) {
+			cout << "decoder error " << error
+		 	<< ": " << lodepng_error_text(error) << endl;
+			exit(1);
+		}
 
 		for(unsigned int j=0; j<image.size(); j+=4) {
 			red_matrix[i].push_back(image[j]/255.0f);
@@ -405,6 +410,7 @@ void init() {
 	width = 256;
 	height = 256;
 	trans_y = 0;
+	max_light = 0;
 	
 	env_resolution = 16;
 	
@@ -519,7 +525,6 @@ void display(){
 	
 	
 	/* Loop through the chosen lights and combine them with their weight */
-	float max_light = 0;
 	for (unsigned int j=0; j<red_lights.size(); j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
