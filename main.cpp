@@ -25,7 +25,6 @@
 #define USEHAAR
 
 typedef glm::vec3 vec3;
-typedef glm::mat3 mat3;
 
 using namespace std;
 
@@ -38,7 +37,8 @@ float trans_x;
 float trans_y;
 float max_light;
 char* scenefolder = "povray/tree_16x16/sharp_tree_images";
-int env_map_move_rate;
+int env_move_rate;
+int num_wavelets = 150;
 
 /* used for counting files in directory */
 glob_t gl;
@@ -407,22 +407,41 @@ void keyboard(unsigned char key, int x, int y) {
 	switch(key){
 		case 'w':
             sort_mode = sort_mode == NAIVE ? WEIGHTED : NAIVE;
+			if (sort_mode==NAIVE){
+				cout << "Now using Naive sort (Sorted by wavelet coefficients)" << endl;
+			} else {
+				cout << "Now using transport-weighted sorting" << endl;
+			}
 			break;
 		case 'a':
 			filename = "Grace";
+			cout << "Environment Map: Grace Cathedral" << endl;
 			build_environment_vector(filename);
 			break;
 		case 's':
 			filename = "Grove";
+			cout << "Environment Map: Eucalyptus Grove" << endl;
 			build_environment_vector(filename);
 			break;
 		case 'd':
 			filename = "Beach";
+			cout << "Environment Map: Grace Cathedral" << endl;
 			build_environment_vector(filename);
 			break;
         case 'f':
             filename = "AreaLight";
+			cout << "Environment Map: Area Light" << endl;
 			build_environment_vector(filename);
+			break;
+		case 'o':
+			num_wavelets -= 10;
+			num_wavelets = max(num_wavelets, 10);
+			cout << "Now using " << num_wavelets << " wavelets per frame" << endl;
+			break;
+		case 'p':
+			num_wavelets += 10;
+			num_wavelets = min(num_wavelets, (int)red_means.size());
+			cout << "Now using " << num_wavelets << " wavelets per frame" << endl;
 			break;
 		case 27:  // Escape to quit
 			delete [] red_matrix;
@@ -437,18 +456,18 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKey(int key,int x,int y) {
 	switch(key) {
 		case 100: //left
-			shift_env_map(-env_map_move_rate);
+			shift_env_map(-env_move_rate);
 			break;
 		case 101: //up
-			env_map_move_rate = min(env_map_move_rate+1,(int)env_resolution);
-			cout << "Environment shift rate is " << env_map_move_rate << endl;
+			env_move_rate = min(env_move_rate+1, (int)env_resolution);
+			cout << "Environment shift rate is " << env_move_rate << endl;
 			break;
 		case 102: //right
-			shift_env_map(env_map_move_rate);
+			shift_env_map(env_move_rate);
 			break;
 		case 103: //down
-			env_map_move_rate = max(env_map_move_rate-1, 1);
-			cout << "Environment shift rate is " << env_map_move_rate << endl;
+			env_move_rate = max(env_move_rate-1, 1);
+			cout << "Environment shift rate is " << env_move_rate << endl;
 			break;
 	}
 	glutPostRedisplay();
@@ -459,7 +478,7 @@ void init() {
 	height = 256;
 	trans_y = 0;
 	max_light = 0;
-	env_map_move_rate = 1;
+	env_move_rate = 1;
 
     /** calculate env_resolution based on number of files in scenefolder */
     string pngs = string(scenefolder) + "/*.png";
@@ -577,7 +596,7 @@ void display(){
 	
 	/* Loop through the chosen lights and combine them with their weight */
 	
-	for (unsigned int j=0; j<150; j++) {
+	for (unsigned int j=0; j<num_wavelets; j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
 		int b_ind = blue_lights[j].first;
