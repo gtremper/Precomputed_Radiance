@@ -385,11 +385,10 @@ void init() {
 	
 	env_resolution = 16;
 	
-	char* temp = "povray/tree_16x16/sharp_tree_images";
 	cout << "Building trasport matrix...   ";
-	build_transport_matrix(temp,env_resolution*env_resolution*6);
+	build_transport_matrix(scenefolder,env_resolution*env_resolution*6);
 	cout << "done" << endl;
-	temp = "Grace";
+	char* temp = "Grace";
 	build_environment_vector(temp);
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
@@ -555,6 +554,7 @@ parse_command_line(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]){
 	srand(time(0));
+    parse_command_line(argc, argv);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutCreateWindow("Viewer");
