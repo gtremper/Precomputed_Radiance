@@ -21,7 +21,7 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
-#define USEHAAR
+//#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -189,6 +189,10 @@ void build_transport_matrix(char *folder, const int num_files) {
 }
 
 void build_environment_vector(char *folder) {
+	red_env.clear();
+	green_env.clear();
+	blue_env.clear();
+	
 	unsigned int NUM_FACES = 6;
 	unsigned int resolution = 256;
 	
@@ -273,7 +277,7 @@ void calculate_lights_used(){
 	#endif
 	
 	/* Create new lights vectors. This just uses all of them right now */
-	int count = 0;
+	int count = 0;	
 	for (unsigned int i=0; i<red_env.size(); i++) {
 		if (red_haar[i]>EPSILON) {
 			red_lights.push_back( make_pair(i, red_haar[i]) );
@@ -307,22 +311,6 @@ void shift_env_map(int num) {
 	}
 }
 
-/* Thise is for moving around an area light */
-void shift_area_light(int amount) {
-	for (unsigned int i=0; i<red_lights.size(); i++) {
-		red_lights[i].first += amount;
-		red_lights[i].first = red_lights[i].first % red_env.size();
-	}
-	for (unsigned int i=0; i<green_lights.size(); i++) {
-		green_lights[i].first += (amount+green_env.size()) % (green_env.size());
-	}
-	for (unsigned int i=0; i<blue_lights.size(); i++) {
-		blue_lights[i].first += (amount+blue_env.size()) % (blue_env.size());
-	}
-	cout << red_lights[0].first << endl;
-	cout << green_lights[0].first << endl;
-	cout << blue_lights[0].first << endl;
-}
 
 /* Mouse Functions */
 void mouseClick(int button, int state, int x, int y) {
@@ -342,17 +330,6 @@ void mouse(int x, int y) {
 	trans_y = min(1.0f,trans_y);
 	trans_y = max(0.0f,trans_y);
 	
-	red_lights.clear();
-	green_lights.clear();
-	blue_lights.clear();
-	
-	red_lights.push_back(make_pair(0,1.0f-trans_y));
-	red_lights.push_back(make_pair(1,trans_y));
-	green_lights.push_back(make_pair(0,1.0f-trans_y));
-	green_lights.push_back(make_pair(1,trans_y));
-	blue_lights.push_back(make_pair(0,1.0f-trans_y));
-	blue_lights.push_back(make_pair(1,trans_y));
-	
 	glutPostRedisplay();
 }
 
@@ -367,18 +344,21 @@ void reshape(int w, int h){
 }
 
 void keyboard(unsigned char key, int x, int y) {
+	char *filename;
 	switch(key){
 		case 'w':
-			shift_area_light(env_resolution);
 			break;
 		case 'a':
-			shift_area_light(-1);
+			filename = "Grace";
+			build_environment_vector(filename);
 			break;
 		case 's':
-			shift_area_light(-env_resolution);
+			filename = "Grove";
+			build_environment_vector(filename);
 			break;
 		case 'd':
-			shift_area_light(1);
+			filename = "Beach";
+			build_environment_vector(filename);
 			break;
 		case 27:  // Escape to quit
 			delete [] red_matrix;
@@ -418,7 +398,7 @@ void init() {
 	cout << "Building trasport matrix...   ";
 	build_transport_matrix(temp,env_resolution*env_resolution*6);
 	cout << "done" << endl;
-	temp = "Grove";
+	temp = "Grace";
 	build_environment_vector(temp);
 
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
@@ -513,18 +493,16 @@ void draw_env_map() {
 
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
-	//cout << trans_y << endl;
 	
 	/* Calculate weights for 'lights' vector */
 	calculate_lights_used();
 	
 	/* initialize pixel vector to set as texture */
 	vector<float> pre_image;
-	pre_image.reserve(3*width*height);
-	memset(&pre_image[0], 0, 3*width*height*sizeof(float));
-	
+	pre_image.resize(3*width*height, 0);
 	
 	/* Loop through the chosen lights and combine them with their weight */
+	
 	for (unsigned int j=0; j<red_lights.size(); j++) {
 		int r_ind = red_lights[j].first;
 		int g_ind = green_lights[j].first;
@@ -545,7 +523,6 @@ void display(){
 	}
 	
 	vector<unsigned char> image;
-	image.reserve(3*width*height);
 	
 	cout << "MAXLIGHT: " << max_light << endl;
 	float light_normal = (1.0f/max_light) * 255.0f;
