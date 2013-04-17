@@ -21,7 +21,7 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
-//#define USEHAAR
+#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -141,7 +141,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 	/* Load files into matrix */
 	for (int i=0; i<num_files; i++) {
 		char filename[50];
-		sprintf(filename, "%s/%03d.png", folder, i);
+		sprintf(filename, "%s/%04d.png", folder, i);
 		cout << filename << endl;
 		
 		unsigned error = lodepng::decode(image, width, height, filename);
@@ -392,9 +392,9 @@ void init() {
 	trans_y = 0;
 	max_light = 0;
 	
-	env_resolution = 16;
+	env_resolution = 4;
 	
-	char* temp = "tree_images";
+	char* temp = "tree_images_small";
 	cout << "Building trasport matrix...   ";
 	build_transport_matrix(temp,env_resolution*env_resolution*6);
 	cout << "done" << endl;
@@ -513,6 +513,7 @@ void display(){
 		float b_weight = blue_lights[j].second;
 		
 		for (unsigned int i=0; i<width*height; i++) {
+			//cout << i << " " << blue_matrix[b_ind].size() << endl;
 			pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
 			pre_image[3*i+1] += green_matrix[g_ind][i]*g_weight;
 			pre_image[3*i+2] += blue_matrix[b_ind][i]*b_weight;
