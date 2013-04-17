@@ -160,7 +160,7 @@ void build_transport_matrix(char *folder, const int num_files) {
           sprintf(filename, "%s/%04d.png", folder, i);
         else
           sprintf(filename, "%s/%03d.png", folder, i);
-		cout << filename << endl;
+		clog << "Loading file: " << filename << "\r";
 		
 		unsigned error = lodepng::decode(image, width, height, filename);
 		
@@ -178,11 +178,14 @@ void build_transport_matrix(char *folder, const int num_files) {
 		image.clear();
 	}
 	
+	clog << "\n";
+	
 	/* Haar transform rows of matrix */
 	vector<float> red_row;
 	vector<float> green_row;
 	vector<float> blue_row;
 	for (unsigned int pixel=0; pixel<width*height; pixel++) {
+		clog << "Haar transforming row " << pixel << " of " <<width*height<<"\r";
 		for (int i=0; i<num_files; i++) {
 			red_row.push_back(red_matrix[i][pixel]);
 			green_row.push_back(green_matrix[i][pixel]);
@@ -204,6 +207,7 @@ void build_transport_matrix(char *folder, const int num_files) {
 		green_row.clear();
 		blue_row.clear();
 	}
+	clog << "\nAlmost done...\n";
 	
 	/* Fine average intensities for weighting*/
 	for (unsigned int i=0; i<num_files; i++) {
@@ -463,6 +467,7 @@ void keyboard(unsigned char key, int x, int y) {
 			break;
 		case 'h':
 			print_help();
+			break;
 		case 27:  // Escape to quit
 			delete [] red_matrix;
 			delete [] green_matrix;
@@ -508,9 +513,7 @@ void init() {
 	
     env_resolution = sqrt(numSceneFiles / 6.0);
 	
-	clog << "Building trasport matrix...   ";
 	build_transport_matrix(scenefolder, numSceneFiles);
-	clog << "done" << endl;
 	char* temp = "Grace";
 	build_environment_vector(temp);
 
