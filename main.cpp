@@ -24,6 +24,8 @@
 /* Define this if you want to use haar transform */
 #define USEHAAR
 
+enum {NAIVE, WEIGHTED};
+
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
 
