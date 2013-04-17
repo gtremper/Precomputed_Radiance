@@ -21,7 +21,7 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
-#define USEHAAR
+//#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -192,6 +192,7 @@ void build_environment_vector(char *folder) {
 	red_env.clear();
 	green_env.clear();
 	blue_env.clear();
+	max_light = 0;
 	
 	unsigned int NUM_FACES = 6;
 	unsigned int resolution = 256;
@@ -392,9 +393,9 @@ void init() {
 	trans_y = 0;
 	max_light = 0;
 	
-	env_resolution = 4;
+	env_resolution = 16;
 	
-	char* temp = "tree_images_small";
+	char* temp = "povray/tree_16x16/sharp_tree_images";
 	cout << "Building trasport matrix...   ";
 	build_transport_matrix(temp,env_resolution*env_resolution*6);
 	cout << "done" << endl;
