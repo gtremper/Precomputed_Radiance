@@ -21,7 +21,7 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 /* Define this if you want to use haar transform */
-//#define USEHAAR
+#define USEHAAR
 
 typedef glm::vec3 vec3;
 typedef glm::mat3 mat3;
@@ -278,22 +278,11 @@ void calculate_lights_used(){
 	#endif
 	
 	/* Create new lights vectors. This just uses all of them right now */
-	int count = 0;	
 	for (unsigned int i=0; i<red_env.size(); i++) {
-		if (red_haar[i]>EPSILON) {
-			red_lights.push_back( make_pair(i, red_haar[i]) );
-			count++;
-		}
-		if (green_haar[i]>EPSILON) {
-			green_lights.push_back( make_pair(i, green_haar[i]) );
-			count++;
-		}
-		if (blue_haar[i]>EPSILON) {
-			blue_lights.push_back( make_pair(i, blue_haar[i]) );
-			count++;
-		}
+		red_lights.push_back( make_pair(i, red_haar[i]) );
+		green_lights.push_back( make_pair(i, green_haar[i]) );
+		blue_lights.push_back( make_pair(i, blue_haar[i]) );
 	}
-	cout <<"NUMZERO: " << red_env.size()*3 - count << endl;
 	
 }
 
@@ -512,9 +501,11 @@ void display(){
 		float r_weight = red_lights[j].second;
 		float g_weight = green_lights[j].second;
 		float b_weight = blue_lights[j].second;
+		if (b_weight >= 16*16*6){
+			cout << "TOO BIG" << b_weight<<endl;
+		}
 		
 		for (unsigned int i=0; i<width*height; i++) {
-			//cout << i << " " << blue_matrix[b_ind].size() << endl;
 			pre_image[3*i] += red_matrix[r_ind][i]*r_weight;
 			pre_image[3*i+1] += green_matrix[g_ind][i]*g_weight;
 			pre_image[3*i+2] += blue_matrix[b_ind][i]*b_weight;
