@@ -39,6 +39,7 @@ float max_light;
 char* scenefolder = "povray/tree_16x16/sharp_tree_images";
 int env_move_rate;
 int num_wavelets = 150;
+int scene_resolution = 256;
 
 /* used for counting files in directory */
 glob_t gl;
@@ -236,7 +237,7 @@ void build_environment_vector(char *folder) {
 	max_light = 0;
 	
 	unsigned int NUM_FACES = 6;
-	unsigned int resolution = 256;
+	unsigned int resolution = scene_resolution;
 	
 	vector<unsigned char> image; //the raw pixels
 	
@@ -499,8 +500,8 @@ void specialKey(int key,int x,int y) {
 }
 
 void init() {
-	width = 256;
-	height = 256;
+	width = scene_resolution;
+	height = scene_resolution;
 	trans_y = 0;
 	max_light = 0;
 	env_move_rate = 1;
@@ -672,11 +673,22 @@ void display(){
 
 void
 parse_command_line(int argc, char* argv[]) {
-    if(argc != 2)
-    {
-      return;
+    for (int i = 1; i < argc; i++) {
+        if(strcmp(argv[i],"-r") == 0) {
+            scene_resolution = atoi(argv[i+1]);
+            i++;
+        } else if (strcmp(argv[i],"-f") == 0) {
+            scenefolder = argv[i+1];
+            i++;
+        } else if (strcmp(argv[i],"-h") == 0) {
+            cout << "Command Line Options:" << endl;
+            cout << "-f [path/to/scene/folder]" << endl;
+            cout << "   Defaults to povray/tree_16x16/sharp_tree_images" << endl;
+            cout << "-r [resolution]" << endl;
+            cout << "   Resolution for the scene images. Defaults to 256" << endl;
+            exit(0);
+        }
     }
-    scenefolder = argv[1];
 }
 
 
