@@ -25,7 +25,7 @@ camera{location<0,1.5,-1> look_at<0,0.4,0>}
 #warning str(2-4*yclock, 5, 2)
 light_source
 {
-  <-4+8*xclock,.1+8*yclock,-4>
+  <-40+80*xclock,.1+80*yclock,-40>
   color rgb 1.0 / side
 }
 ////////////////////////////////
@@ -164,4 +164,6 @@ union
 ////////////////////////////////
 ////////////////////////////////
 
-object{tree finish{ ambient 0 diffuse 0} }
+object{tree finish{ ambient 0 diffuse 0 } }
+
+global_settings { ambient_light rgb 0 }
