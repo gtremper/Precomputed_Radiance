@@ -82,7 +82,7 @@ intensity of the corresponding pixel on the cubemap. Without compression,
 real-time frame rate become intractable with large environment maps and output
 image resolutions.
 
-\begin{table}
+\begin{table}[htb]
     \centering
     \includegraphics[width=.1\linewidth]{figs/grace/Grace0}
     \includegraphics[width=.1\linewidth]{figs/grace/Grace1}
@@ -105,6 +105,13 @@ suggested three methods of selecting subset of wavelet basis lights. These are
 a naive ``unweighted selection'' which only looks at the wavelet coefficients and
 a``transport-weighted selection'' which wights each wavelet coefficient by the
 energy in the $i^{th}$ column of the transport matrix.
+
+\begin{table}
+  \centering
+  \includegraphics[width=.4\linewidth]{figs/naive}
+  \includegraphics[width=.4\linewidth]{figs/weighted}
+  \caption{Naive selection (left) vs Weighted selecting (right)}
+\end{table}
 
 
 
