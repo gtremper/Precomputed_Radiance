@@ -26,7 +26,7 @@ camera{location<0,1.5,-1> look_at<0,0.4,0>}
 light_source
 {
   <-40+80*xclock,.1+80*yclock,-40>
-  color rgb 1.0 / side
+  color rgb 1.0
 }
 ////////////////////////////////
 background {color rgb 0}
