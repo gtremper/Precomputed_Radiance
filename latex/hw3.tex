@@ -11,6 +11,35 @@
 
 \section{Introduction}
 
+A video demonstration of our solution can be found here:
+
+\begin{center}
+  \href{https://www.youtube.com/watch?v=o4TLxZaGlrM}{https://www.youtube.com/watch?v=o4TLxZaGlrM}
+\end{center}
+
+The code for our solution os publicly available on Github:
+
+\begin{center}
+  \href{https://github.com/gtremper/Precomputed\_Radiance}{https://github.com/gtremper/Precomputed\_Radiance}
+\end{center}
+
+The code was compiled using GLM 0.9.4.2 on Mac OS X 10.7.4 and 10.8.2. To
+compile, run \verb'make' from the \verb'Precomputed_Radiance' directory. The
+precomputed scenes can be found in \verb'scenes': we have prerendered a tree, a
+stone teapot, and a mirror sphere each at a resolution of $256\times 256$
+pixels. Environment maps can be found in \verb'environment_maps'. The compiled
+binary, \verb'viewer', accepts an optional command line argument. \verb'./viewer -f path/to/scene/folder' will start the viewing program using the successively
+numbered pictures in the supplied path. Try the following:
+
+\begin{itemize}
+    \item \verb`prompt> ./viewer scenes/teapot`
+    \item \verb`prompt> ./viewer scenes/sphere`
+    \item \verb`prompt> ./viewer scenes/tree`
+\end{itemize}
+
+After the program starts and the precomputation has been done, text will appear
+in your terminal window explaining the key commands for the viewer.
+
 \section{Basic Relighting}
 
 For the basic relighting viewer, we start by computing the light transport
