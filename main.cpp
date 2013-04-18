@@ -28,7 +28,7 @@ unsigned int height;
 unsigned int width;
 unsigned int env_resolution;
 float max_light;
-char* scenefolder = "povray/tree_16x16/sharp_tree_images";
+char* scenefolder = "scenes/tree";
 int env_move_rate;
 int num_wavelets = 150;
 int scene_resolution = 256;
